@@ -163,10 +163,15 @@
             box-shadow: 0 0 8px #8fd; animation: wspin 3s linear infinite;
         }
 
-        /* Burst blaster: three barrels */
+        /* Toxgun: a compact green/black minigun (rotating barrel cluster) */
         .wic-burst::before {
-            left: 12px; top: 19px; width: 26px; height: 4px; background: #6cf;
-            box-shadow: 0 -7px 0 #6cf, 0 7px 0 #6cf, 0 0 6px #6cf; border-radius: 2px;
+            left: 10px; top: 15px; width: 24px; height: 12px; background: #14201a;
+            border: 1px solid #3fbf6a; border-radius: 3px;
+            box-shadow: 0 0 6px #3fbf6a;
+        }
+        .wic-burst::after {
+            left: 30px; top: 17px; width: 12px; height: 3px; background: #5cff8f;
+            box-shadow: 0 3px 0 #5cff8f, 0 -3px 0 #5cff8f, 0 0 6px #5cff8f; border-radius: 2px;
         }
 
         /* Shotgun: a real double-barrel gun silhouette */
@@ -1076,9 +1081,9 @@
                     <div class="contact-item" data-weapon="burst">
                         <div class="wic wic-burst"></div>
                         <div class="contact-details">
-                            <div class="contact-title">Burst Blaster</div>
-                            <div class="contact-subtitle">Multi-shot burst fire</div>
-                            <div class="contact-description">Fires a quick burst of bullets in a tight spread.</div>
+                            <div class="contact-title">Toxgun</div>
+                            <div class="contact-subtitle">Toxic minigun</div>
+                            <div class="contact-description">A small handheld minigun spraying toxic rounds. Low hit damage, but each bullet stacks a poison DoT that ramps up fast (capped at 1000% of your DPS/sec).</div>
                         </div>
                     </div>
                     <div class="contact-item" data-weapon="piercer">
@@ -1306,14 +1311,6 @@
                     <div style="background: rgba(40,40,60,0.5); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                         <h3 style="color: #4aaaf5; margin-top:0;">Weapon Abilities</h3>
                         <div id="abilityShop"></div>
-                    </div>
-                    <div style="background: rgba(40,40,60,0.5); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <h3 style="color: #ffce6b; margin-top:0;">⟡ Relics</h3>
-                        <p style="color:#aab; font-size:13px; margin-top:0;">Craft rings and equip up to two. Equipped relics buff all of your stats.</p>
-                        <div style="color:#cfe8ff; font-weight:bold; margin:12px 0 8px;">Equipped Slots</div>
-                        <div id="relicSlots" style="display:flex; gap:18px; margin-bottom:20px;"></div>
-                        <div style="color:#cfe8ff; font-weight:bold; margin:12px 0 8px;">Crafting</div>
-                        <div id="relicCraft"></div>
                     </div>
                     <div style="background: rgba(40,40,60,0.5); padding: 20px; border-radius: 8px;">
                         <h3 style="color: #c0d8ff; margin-top:0;">🛡 Armor</h3>
@@ -1557,7 +1554,7 @@
                 <select id="devWeaponSelect" style="width:100%; padding:6px; border-radius:4px; border:1px solid #666; background:#222; color:#fff; margin-bottom:6px;">
                     <option value="sword">Sword</option>
                     <option value="shuriken">Pinball</option>
-                    <option value="burst">Burst</option>
+                    <option value="burst">Toxgun</option>
                     <option value="piercer">Piercer</option>
                     <option value="cryo">Cryo-Shatter</option>
                     <option value="engineer">Engineer</option>
@@ -1566,6 +1563,7 @@
                     <option value="pulse">Pulse Modulator</option>
                     <option value="tesla">Tesla Coil</option>
                     <option value="time">Time Element ⌛</option>
+                    <option value="dualtox">DualTox ⚗⚗ (dev)</option>
                 </select>
                 <button class="btn" id="devSwitchWeaponBtn" style="width:100%;">EQUIP WEAPON</button>
             </div>
@@ -2607,7 +2605,8 @@
                 dash: "z",
                 ability: "z",
                 ability2: "x",
-                gameSpeed: "g"
+                gameSpeed: "0",
+                modeSwitch: "g"
             };
             let keybinds = Object.assign({}, DEFAULT_KEYBINDS);
             // Human-readable labels for the keybinds UI
@@ -2619,7 +2618,8 @@
                 dash: "Dash",
                 ability: "Weapon Ability 1",
                 ability2: "Weapon Ability 2",
-                gameSpeed: "Toggle Game Speed"
+                gameSpeed: "Toggle Game Speed",
+                modeSwitch: "DualTox Mode Switch"
             };
 
             // ---- Weapon abilities ----
@@ -2628,6 +2628,50 @@
             // key activates it; otherwise the key falls back to dashing.
             // Each weapon can have up to two abilities (slot 0 = Z, slot 1 = X).
             const WEAPON_ABILITIES = {
+                burst: [
+                    {
+                        name: "Toxslam",
+                        instant: true,
+                        cooldown: 10,
+                        desc: "Slam the ground (costs some of your HP): a toxic blast that flings out tox particles which explode where they land. Every explosion leaves a lingering toxic pool."
+                    },
+                    {
+                        name: "Tox Dragon",
+                        instant: true,
+                        purchasable: true,
+                        cooldown: 16,
+                        desc: "Fire a toxic dragon as a big bullet toward your cursor. It bursts in a large AoE and leaves a toxic pool."
+                    }
+                ],
+                dualtox: [
+                    {
+                        name: "Toxslam", altName: "Crack the Sky",
+                        instant: true,
+                        cooldown: 10,
+                        desc: "Slam the ground (small HP cost): a toxic blast that flings tox particles which explode into lingering pools.",
+                        altDesc: "Summon acid lasers that streak off in random directions leaving acid trails, then explode — the trails detonate too in a chain reaction."
+                    },
+                    {
+                        name: "Tox Dragon", altName: "Hydra",
+                        instant: true,
+                        cooldown: 16,
+                        desc: "Fire a toxic dragon toward your cursor. It bursts in a large AoE and leaves a toxic pool.",
+                        altDesc: "Unleash a barrage of smaller toxic dragons that fan out and expand across the field."
+                    },
+                    {
+                        name: "Ignition",
+                        duration: 8,
+                        cooldown: 20,
+                        desc: "Erupt in green flames (small HP cost): move faster and make ALL your skills 35% stronger for 8 seconds. The flames scorch nearby enemies."
+                    },
+                    {
+                        name: "Acid Rain", altName: "Necrotic Splash",
+                        instant: true,
+                        cooldown: 22,
+                        desc: "Call down a barrage of acid shells onto random spots across your view. Each landing leaves an acid pool and a corrosive cloud.",
+                        altDesc: "Burst in dark acid and infect the battlefield: for a while, any poisoned enemy that dies explodes, spreading 50% of its poison DPS to enemies in a large radius as a fresh stack."
+                    }
+                ],
                 tesla: [
                     {
                         name: "Overdrive",
@@ -2663,6 +2707,12 @@
                         instant: true,
                         cooldown: 13,
                         desc: "Unleashes 8-14 pinballs in random directions at once."
+                    },
+                    {
+                        name: "Giant Pinball",
+                        instant: true,
+                        cooldown: 40,
+                        desc: "Hurls a huge pinball toward your cursor that recoils you backward. It hits for 5000% of pinball base damage, then explodes into a spray of regular pinballs."
                     }
                 ],
                 boomerang: [
@@ -2752,11 +2802,17 @@
             let currentDifficulty = 'normal';
             function getDifficulty() { return DIFFICULTIES[currentDifficulty] || DIFFICULTIES.normal; }
 
-            // Runtime ability state (per run) — one slot per ability index
-            let abilityActiveTimer = [0, 0, 0];   // seconds remaining of active effect (3 slots)
-            let abilityCooldown = [0, 0, 0];      // seconds until usable again
-            let abilityCooldownMax = [0, 0, 0];   // the cooldown it started from (for the HUD ring)
+            // Runtime ability state (per run) — one slot per ability index (up to 4: Z/X/C/V)
+            let abilityActiveTimer = [0, 0, 0, 0];   // seconds remaining of active effect
+            let abilityCooldown = [0, 0, 0, 0];      // seconds until usable again
+            let abilityCooldownMax = [0, 0, 0, 0];   // the cooldown it started from (for the HUD ring)
             let engineerMode = 'turret';        // 'turret' or 'wrench' (toggle with X)
+            let ignitionAuraTimer = 0;          // DualTox Ignition: green-flame scorch cadence
+            let weaponMode = 0;                 // DualTox stance/moveset (0 or 1) — switched with G
+            let modeSwitchCd = 0;               // universal 2s cooldown on the G mode switch
+            let necroticTimer = 0;              // Necrotic Splash: window where poisoned deaths explode
+            let pendingMortars = [];            // staggered Acid Rain launches (appear one by one)
+            let mortarLaunchTimer = 0;
             let frenzyShotsRemaining = 0;       // pinballs left to fire in the current Frenzy barrage
             let frenzyShotTimer = 0;            // countdown to the next Frenzy shot
             const FRENZY_SHOT_INTERVAL = 0.05;  // ~20 shots/sec — a very quick barrage
@@ -2838,19 +2894,123 @@
                 abilityCooldown[slot] = ab.cooldown * skillCooldownFactor();
                 abilityCooldownMax[slot] = abilityCooldown[slot];
                 soundManager.shieldBeltActivate(); // a punchy power-up sound
-                addNotification(`${ab.name} activated!`, { color: '120,220,255', baseY: 160 });
+                addNotification(`${abilityDisplayName(ab)} activated!`, { color: '120,220,255', baseY: 160 });
                 if (ab.instant) {
                     // Fire the instant effect now; no active duration.
                     fireInstantAbility(player.weapon, slot);
                 } else {
                     abilityActiveTimer[slot] = ab.duration;
+                    if (ab.name === 'Ignition') {
+                        // Erupt in flames — costs some HP (halved on DualTox).
+                        player.health = Math.max(1, player.health - player.maxHealth * 0.10 * skillHpCostMult());
+                        addShake(6, 0.3);
+                        if (soundManager.firePillar) soundManager.firePillar();
+                    }
                 }
                 return true;
             }
 
             // Instant ability effects (fired once on activation).
             function fireInstantAbility(weapon, slot) {
-                if (weapon === 'piercer') {
+                if (isToxWeapon(weapon)) {
+                    // Abilities deal SET damage (explosion + a flat-damage pool) rather than
+                    // feeding the gun's stacking toxic — so they no longer runaway. Their AoE
+                    // sizes scale with your Range buff, and Ignition boosts all of them 35%.
+                    const stats = getToxgunStats();
+                    const dmg = stats.damage * skillPowerMult();
+                    const rangeMul = 1 + player.buffRange;
+                    const m1 = (weapon === 'dualtox' && weaponMode === 1);   // Mode 2 moveset
+                    if (slot === 0 && m1) {
+                        // Crack the Sky: acid lasers streak off in random directions leaving
+                        // acid trails, then explode — and the trails chain-explode too.
+                        const n = 7;
+                        for (let k = 0; k < n; k++) {
+                            const a = (k / n) * Math.PI * 2 + randRange(-0.3, 0.3);
+                            const spd = 9 * TILE_SIZE;
+                            projectiles.push({
+                                owner: 'acidBeam', x: player.x, y: player.y,
+                                vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, ang: a,
+                                dmg: dmg * 5, poolDps: dmg * 1.5, trailTimer: 0, seq: 0,
+                                life: randRange(0.6, 0.9), maxLife: 0.9, fromBoss: false
+                            });
+                        }
+                        addShake(7, 0.35);
+                        if (soundManager.shoot) soundManager.shoot();
+                    } else if (slot === 0) {
+                        // Toxslam: costs HP (halved on DualTox), big central blast that flings
+                        // tox particles which explode where they land, leaving pools.
+                        player.health = Math.max(1, player.health - player.maxHealth * 0.08 * skillHpCostMult());
+                        const slamR = TILE_SIZE * 4.5 * rangeMul;
+                        toxExplode(player.x, player.y, slamR, dmg * 8, dmg * 3, 6);
+                        addShake(9, 0.4);
+                        const nP = 8;
+                        for (let i = 0; i < nP; i++) {
+                            const a = (i / nP) * Math.PI * 2 + randRange(-0.25, 0.25);
+                            const spd = randRange(3.5, 6.5) * TILE_SIZE;
+                            projectiles.push({
+                                owner: 'toxparticle', x: player.x, y: player.y,
+                                vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
+                                life: randRange(0.4, 0.7), maxLife: 0.7,
+                                partDmg: dmg * 4, poolDps: dmg * 1.5, partR: TILE_SIZE * 2.4 * rangeMul,
+                                size: 5, fromBoss: false
+                            });
+                        }
+                    } else if (slot === 1 && m1) {
+                        // Hydra: a barrage of smaller toxic dragons fanning out and expanding.
+                        const mx = cameraX + mouseX, my = cameraY + mouseY;
+                        const base = Math.atan2(my - player.y, mx - player.x);
+                        const n = 7;
+                        for (let k = 0; k < n; k++) {
+                            const off = (k - (n - 1) / 2) * 0.3;
+                            const a = base + off;
+                            const spd = (13 + Math.abs(off) * 7) * TILE_SIZE;   // outer heads faster → expand
+                            projectiles.push({
+                                owner: 'toxdragon', x: player.x, y: player.y,
+                                vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, ang: a,
+                                damage: dmg * 6, poolDps: dmg * 2,
+                                blastR: TILE_SIZE * 4.5 * rangeMul, life: 1.25, maxLife: 1.25, size: 11,
+                                swirlTimer: 0, fromBoss: false
+                            });
+                        }
+                        if (soundManager.shoot) soundManager.shoot();
+                    } else if (slot === 1) {
+                        // Tox Dragon: a fast, big toxic bullet toward the cursor; bursts in a
+                        // large AoE and leaves a pool (on impact or at the end of its flight).
+                        const mx = cameraX + mouseX, my = cameraY + mouseY;
+                        const ang = Math.atan2(my - player.y, mx - player.x);
+                        projectiles.push({
+                            owner: 'toxdragon', x: player.x, y: player.y,
+                            vx: Math.cos(ang) * 17 * TILE_SIZE, vy: Math.sin(ang) * 17 * TILE_SIZE, ang,
+                            damage: dmg * 16, poolDps: dmg * 4,
+                            blastR: TILE_SIZE * 9 * rangeMul, life: 1.3, maxLife: 1.3, size: 19,
+                            swirlTimer: 0, fromBoss: false
+                        });
+                        if (soundManager.shoot) soundManager.shoot();
+                    } else if (slot === 3 && m1) {
+                        // Necrotic Splash: burst in dark acid + infect the field so poisoned
+                        // deaths erupt and spread poison for a while.
+                        necroticTimer = 14;
+                        const r = getBeltRadius() * 1.2;
+                        toxExplode(player.x, player.y, r, dmg * 6, dmg * 2, 5);
+                        projectiles.push({
+                            owner: 'necroticBurst', x: player.x, y: player.y, vx: 0, vy: 0,
+                            radius: 0, maxRadius: r, life: 0.5, maxLife: 0.5, damage: 0, fromBoss: false
+                        });
+                        addShake(8, 0.4);
+                        addNotification("Necrotic Splash — poisoned deaths now erupt!", { color: '120,220,90', baseY: 160 });
+                    } else if (slot === 3) {
+                        // Acid Rain: queue staggered mortars so the landing rings appear one by one.
+                        const drops = 9;
+                        const marginX = WIDTH * 0.12, marginY = HEIGHT * 0.12;
+                        pendingMortars = [];
+                        for (let k = 0; k < drops; k++) {
+                            const tx = cameraX + marginX + Math.random() * (WIDTH - marginX * 2);
+                            const ty = cameraY + marginY + Math.random() * (HEIGHT - marginY * 2);
+                            pendingMortars.push({ tx, ty, dmg: dmg * 6, poolDps: dmg * 1.5, g: 2600 });
+                        }
+                        mortarLaunchTimer = 0;   // launch the first immediately, then stagger
+                    }
+                } else if (weapon === 'piercer') {
                     // Volley: fire a 50%-damage piercer bullet at every enemy on screen.
                     const stats = getPiercerStats();
                     const dmg = stats.damage * 0.5;
@@ -2874,6 +3034,24 @@
                         shotsFired++;
                     });
                     if (shotsFired > 0) soundManager.shoot();
+                } else if (weapon === 'shuriken' && slot === 1) {
+                    // Giant Pinball: a huge ball toward the cursor that recoils the player,
+                    // hits for 5000% base, then bursts into a spray of regular pinballs.
+                    const stats = getShurikenStats();
+                    const mx = cameraX + mouseX, my = cameraY + mouseY;
+                    const ang = Math.atan2(my - player.y, mx - player.x);
+                    const spd = stats.speed * 0.7;
+                    projectiles.push({
+                        owner: 'giantPinball', x: player.x, y: player.y,
+                        vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd,
+                        damage: stats.damage * 50,          // 5000% of pinball base damage
+                        spin: 0, size: TILE_SIZE * 2.0, life: 2.6, maxLife: 2.6, fromBoss: false
+                    });
+                    // Recoil the player backward (opposite the throw).
+                    player.knockVx = -Math.cos(ang) * 34 * TILE_SIZE;
+                    player.knockVy = -Math.sin(ang) * 34 * TILE_SIZE;
+                    addShake(8, 0.35);
+                    soundManager.shoot();
                 } else if (weapon === 'shuriken') {
                     // Frenzy: queue up 8-14 pinballs to be fired as a rapid barrage
                     // (one shot every frenzyShotInterval seconds), not all at once.
@@ -2998,6 +3176,25 @@
                     fromRanged: false,
                     size: stats.size
                 });
+                soundManager.shoot();
+            }
+
+            // Giant Pinball burst: scatter a ring of regular pinballs from (p.x, p.y).
+            function explodeGiantPinball(p) {
+                const stats = getShurikenStats();
+                const n = 12;
+                for (let k = 0; k < n; k++) {
+                    const a = (k / n) * Math.PI * 2 + Math.random() * 0.18;
+                    projectiles.push({
+                        x: p.x, y: p.y,
+                        vx: Math.cos(a) * stats.speed, vy: Math.sin(a) * stats.speed,
+                        damage: stats.damage, owner: 'shuriken', life: 3,
+                        bounces: Math.min(5, stats.bounces),
+                        locked: false, lastHit: null, lastHitId: null,
+                        fromBoss: false, fromRanged: false, size: stats.size
+                    });
+                }
+                addShake(6, 0.3);
                 soundManager.shoot();
             }
 
@@ -3298,6 +3495,22 @@
                 if (key === 'c' && player.weapon !== 'time' && !gameOver && abList && abList[2]) {
                     e.preventDefault();
                     attemptAbility(2);
+                }
+                // Ability 4 key (V): fire ability slot 3 if the weapon has one (non-Time).
+                if (key === 'v' && player.weapon !== 'time' && !gameOver && abList && abList[3]) {
+                    e.preventDefault();
+                    attemptAbility(3);
+                }
+                // Mode switch (rebindable, default '0') for DualTox: a 2s stun + a universal
+                // 3s cooldown, then swap to the other moveset (Mode 2 = uncapped acid laser).
+                if (key === keybinds.modeSwitch && player.weapon === 'dualtox' && !gameOver && modeSwitchCd <= 0 && (player.switchStun || 0) <= 0) {
+                    e.preventDefault();
+                    player.switchStun = 2.0;
+                    modeSwitchCd = 3.0;
+                    weaponMode = weaponMode === 0 ? 1 : 0;
+                    addShake(4, 0.2);
+                    addNotification(`Switched to Mode ${weaponMode + 1}`, { color: '150,255,120', baseY: 160 });
+                    if (soundManager.shieldBeltActivate) soundManager.shieldBeltActivate();
                 }
                 if (key === keybinds.gameSpeed && hasGameSpeedToggle && player.weapon && player.weapon !== 'time' && !gameOver) {
                     // Build the list of unlocked speeds and cycle to the next one.
@@ -3663,6 +3876,7 @@
             // each rune adds its bonus and resets the duration to 10s.
             let runeDamageMult = 1;   // derived: 1 + runeDamageBonus
             let runeRangeMult = 1;    // derived: 1 + runeRangeBonus
+            let toxgunCapDps = 0;     // Toxgun poison ceiling (10× direct DPS); set on each shot
             let runeDamageBonus = 0;  // accumulated damage bonus (e.g. 0.50 = +50%)
             let runeRangeBonus = 0;   // accumulated range bonus
             let runeBuffTimer = 0;
@@ -3693,7 +3907,8 @@
                     sword: "Sword",
                     firebomb: "Fire Bomb",
                     shuriken: "Pinball",
-                    burst: "Burst Blaster",
+                    burst: "Toxgun",
+                    dualtox: "DualTox",
                     shotgun: "Shotgun",
                     piercer: "Piercer",
                     cryo: "Cryo-Shatter",
@@ -4293,6 +4508,20 @@
             function isKronax(t) { return t === 'kronax'; }
             function isMech(t) { return t === 'mech'; }
 
+            // Extra hittable body radius (beyond the default ~0.5-tile point) so a projectile
+            // can strike ANY part of a big boss, not just its exact center. Regular enemies
+            // return 0 (unchanged); bosses return roughly their drawn body size.
+            function enemyBodyBonus(e) {
+                if (isKronax(e.type) || isMech(e.type)) return TILE_SIZE * 3.0;
+                if (isBossType(e.type)) return TILE_SIZE * 1.0;
+                return 0;
+            }
+            // Aiming closer to the center is worth a small damage bonus: 1.00x at the body
+            // edge up to 1.02x dead-center. `d` = distance from center, `hr` = hit radius.
+            function centerBonus(d, hr) {
+                return 1 + 0.02 * Math.max(0, Math.min(1, 1 - d / (hr || 1)));
+            }
+
             function applyDamageToEnemy(e, amount, opts) {
                 if (!e || amount <= 0) return;
 
@@ -4588,21 +4817,29 @@
                 return player.buffRange;
             }
 
-            function applyDamageAndSpeedBuff(stats) {
+            function applyDamageAndSpeedBuff(stats, opts) {
                 if (!stats) return;
+                // Some weapons (the Toxgun) keep a uniform fire rate and instead convert
+                // attack speed into bonus bullet damage. `attackSpeedAsDamage` does that.
+                const asAsDamage = !!(opts && opts.attackSpeedAsDamage);
                 const corruptMult = isWeaponCorrupted(player.weapon) ? CORRUPT_DAMAGE_MULT : 1;
                 if (stats.damage !== undefined) {
                     stats.damage += accBaseDamageBonus;   // Shadow Cloak: +flat BASE damage, before % scaling
                     stats.damage *= (1 + player.buffAttackDamage);
                     stats.damage *= getSkinDamageMult();
                     stats.damage *= corruptMult;
+                    if (asAsDamage) {
+                        // Attack speed acts as a flat %damage bonus for this weapon.
+                        const as = Math.max(0, player.buffAttackSpeed);
+                        stats.damage *= (1 + as);
+                    }
                 }
                 if (stats.burnDamage !== undefined) {
                     stats.burnDamage *= (1 + player.buffAttackDamage);   // burns now scale with Damage buff
                     stats.burnDamage *= getSkinDamageMult();
                     stats.burnDamage *= corruptMult;
                 }
-                if (stats.cooldown !== undefined) {
+                if (stats.cooldown !== undefined && !asAsDamage) {
                     // Attack speed divides the cooldown by (1 + attackSpeed), capped at 300%.
                     const as = Math.max(0, Math.min(ATTACKSPEED_CAP, player.buffAttackSpeed));
                     stats.cooldown /= (1 + as);
@@ -4645,7 +4882,8 @@
                 switch (weapon) {
                     case 'sword': stats = getSwordStats(); break;
                     case 'shuriken': stats = getShurikenStats(); break;
-                    case 'burst': stats = getBurstStats(); break;
+                    case 'burst': stats = getToxgunStats(); break;
+                    case 'dualtox': stats = getToxgunStats(); break;
                     case 'shotgun': stats = getShotgunStats(); break;
                     case 'piercer': stats = getPiercerStats(); break;
                     case 'cryo': stats = getCryoStats(); break;
@@ -4903,40 +5141,98 @@
                 return stats;
             }
 
-            function getBurstStats() {
+            // TOXGUN — a small handheld toxic minigun. Its fire rate is UNIFORM (fixed) and is
+            // NOT affected by Attack Speed; instead Attack Speed adds bullet damage (like a
+            // %damage bonus). Each bullet does small direct damage but stacks a poison DoT.
+            function getToxgunStats() {
                 const lvl = player.weaponLevel;
-                let damage = 3;
-                let cooldown = 0.25;
+                const dual = player.weapon === 'dualtox';
+                let damage = 1.6;                 // small per-hit direct damage
+                let cooldown = 0.14 / 1.82;       // FIXED, uniform fire rate (1.82× faster than before)
                 let bulletSpeed = 6.5 * TILE_SIZE;
-                let bullets = 2;
-                let spread = degToRad(10);
+                let bullets = 1;                  // rounds per shot
+                let spread = degToRad(3.5);       // slight spread (tight)
+                let toxicFrac = 1.4;              // poison-per-hit as a fraction of the bullet's FINAL damage
 
-                if (lvl >= 2) {
-                    damage *= 1.5;
-                    bullets *= 2;
-                    bulletSpeed *= 1.1;
-                }
-                if (lvl >= 3) {
-                    damage *= 1.4;
-                    bullets *= 3;
-                    spread = degToRad(16.5);
-                    cooldown *= 0.9;
-                }
-                if (lvl >= 4) {
-                    damage *= 1.5;
-                    bullets *= 1;
-                    spread = degToRad(25);
-                    bulletSpeed *= 1.4;
-                    cooldown *= 0.95;
+                if (lvl >= 2) { damage *= 1.4; toxicFrac *= 1.1; }
+                if (lvl >= 3) { toxicFrac *= 1.1; spread = degToRad(4.5); }
+                if (lvl >= 4) { damage *= 1.4; toxicFrac *= 1.15; bullets = 2; }
+
+                if (dual) {                        // DualTox: two miniguns — double damage, 25% shorter cooldown
+                    damage *= 2;
+                    cooldown *= 0.75;
                 }
 
-                // bulletSpeed *= (1 + player.buffRange);   // REMOVED
                 bulletSpeed *= 2;
 
                 const stats = { damage, cooldown, bulletSpeed, bullets, spread };
-                applyDamageAndSpeedBuff(stats);
+                // attackSpeedAsDamage: keep fire rate fixed and fold ALL damage sources —
+                // %damage, Shadow Cloak base damage, skin, corruption, AND attack speed — into
+                // the bullet's damage.
+                applyDamageAndSpeedBuff(stats, { attackSpeedAsDamage: true });
                 stats.damage *= runeDamageMult;
+                // Poison stacks scale off the FINAL bullet damage, so every damage source
+                // (%damage, Shadow Cloak base+%, attack-speed-as-damage, runes) also
+                // strengthens the poison.
+                stats.toxicPerHit = stats.damage * toxicFrac;
                 return stats;
+            }
+
+            // Both the Toxgun ('burst') and the dev-only DualTox share the same firing/toxic code.
+            function isToxWeapon(w) { return w === 'burst' || w === 'dualtox'; }
+            // DualTox's Ignition buff (ability slot 2): while active, you move faster, spawn
+            // green flames, and all skills are 35% stronger.
+            function ignitionActive() { return player.weapon === 'dualtox' && abilityActiveTimer[2] > 0; }
+            function skillPowerMult() { return ignitionActive() ? 1.35 : 1; }
+            // In DualTox Mode 2, abilities show their alternate names (Crack the Sky, Hydra, …).
+            function abilityDisplayName(ab) {
+                return (player.weapon === 'dualtox' && weaponMode === 1 && ab.altName) ? ab.altName : ab.name;
+            }
+            // Skill HP costs are halved on DualTox ("skills don't take as much health").
+            function skillHpCostMult() { return player.weapon === 'dualtox' ? 0.5 : 1; }
+
+            // Refresh the poison ceiling (10× the gun's direct DPS) from current stats — used
+            // by the Toxgun's abilities so their pools obey the same cap as the gun.
+            function refreshToxgunCap() {
+                const s = getToxgunStats();
+                const directDps = s.damage * s.bullets / Math.max(0.001, s.cooldown);
+                toxgunCapDps = 10 * directDps;
+                return directDps;
+            }
+            // A lingering toxic pool: stacks poison on any enemy standing in it (~3×/sec).
+            function spawnToxPool(x, y, radius, dps, life) {
+                projectiles.push({
+                    owner: 'toxpool', x, y, radius, poolDps: dps,
+                    life, maxLife: life, tickTimer: 0, fromBoss: false
+                });
+            }
+            // A toxic explosion: AoE damage + a burst ring + a lingering pool.
+            function toxExplode(x, y, radius, damage, poolDps, poolLife) {
+                enemies.forEach(e => {
+                    if (distance(x, y, e.x, e.y) <= radius + (e.radius || 0)) applyDamageToEnemy(e, damage, { aoe: true });
+                });
+                projectiles.push({
+                    owner: 'toxblast', x, y, vx: 0, vy: 0,
+                    radius: 0, maxRadius: radius, life: 0.4, maxLife: 0.4, damage: 0, fromBoss: false
+                });
+                spawnToxPool(x, y, radius * 0.72, poolDps, poolLife);
+                if (soundManager.explosion) soundManager.explosion();
+            }
+            // Launch one Acid Rain mortar: arcs up from beside the player to m.{tx,ty}.
+            function launchAcidMortar(m) {
+                const g = m.g || 2600;
+                const px = player.x + randRange(-1, 1) * TILE_SIZE;
+                const py = player.y + TILE_SIZE * 0.4;
+                const t = randRange(0.9, 1.35);
+                const vx = (m.tx - px) / t;
+                const vy = (m.ty - py) / t - 0.5 * g * t;   // arc up, then fall to target
+                projectiles.push({
+                    owner: 'acidDrop', x: px, y: py, vx, vy, gravity: g,
+                    targetX: m.tx, targetY: m.ty, flightT: 0, flightMax: t,
+                    dmg: m.dmg, poolDps: m.poolDps,
+                    life: t + 1.5, maxLife: t + 1.5, size: 8, fromBoss: false
+                });
+                if (soundManager.shoot) soundManager.shoot();
             }
 
             function getShotgunStats() {
@@ -5103,19 +5399,19 @@
                 if (shieldLevel <= 0) return null;
                 let radius, arc, thickness, dps;
                 if (shieldLevel === 1) {
-                    radius = 3.5 * TILE_SIZE;
-                    arc = degToRad(50);
-                    thickness = TILE_SIZE * 0.15;
+                    radius = 2.1 * TILE_SIZE;
+                    arc = degToRad(46);
+                    thickness = TILE_SIZE * 0.28;
                     dps = 5;
                 } else if (shieldLevel === 2) {
-                    radius = 4 * TILE_SIZE;
-                    arc = degToRad(75);
-                    thickness = TILE_SIZE * 0.20;
+                    radius = 2.35 * TILE_SIZE;
+                    arc = degToRad(66);
+                    thickness = TILE_SIZE * 0.32;
                     dps = 10;
                 } else {
-                    radius = 4.5 * TILE_SIZE;
-                    arc = degToRad(100);
-                    thickness = TILE_SIZE * 0.25;
+                    radius = 2.6 * TILE_SIZE;
+                    arc = degToRad(88);
+                    thickness = TILE_SIZE * 0.36;
                     dps = 15;
                 }
                 return { radius, arc, thickness, damagePerSec: dps * (1 + player.buffAttackDamage) };
@@ -6144,7 +6440,7 @@
                         const dx = e.x - player.x;
                         const dy = e.y - player.y;
                         const dist = Math.sqrt(dx * dx + dy * dy);
-                        if (dist <= swordRange + TILE_SIZE / 2) {
+                        if (dist <= swordRange + TILE_SIZE / 2 + enemyBodyBonus(e)) {
                             const ang = Math.atan2(dy, dx);
                             let diff = ang - angle;
                             while (diff > Math.PI) diff -= 2 * Math.PI;
@@ -6198,48 +6494,48 @@
                         size: stats.size
                     });
 
-                } else if (player.weapon === 'burst') {
-                    const stats = getBurstStats();
-                    player.weaponCooldown = stats.cooldown;
-                    const baseAngle = angle;
-                    const count = stats.bullets;
-
-                    soundManager.shoot();
-
-                    if (count === 1) {
-                        const vx = Math.cos(baseAngle) * stats.bulletSpeed;
-                        const vy = Math.sin(baseAngle) * stats.bulletSpeed;
-                        projectiles.push({
-                            x: player.x,
-                            y: player.y,
-                            vx, vy,
-                            damage: stats.damage,
-                            owner: 'burst',
-                            life: 2 * rangeMultiplier, // extended
-                            bounces: 0,
-                            fromBoss: false,
-                            fromRanged: false,
-                            size: 4
+                } else if (isToxWeapon(player.weapon)) {
+                    const stats = getToxgunStats();
+                    if (player.weapon === 'dualtox' && weaponMode === 1) {
+                        // MODE 2 — ACID LASER: a continuous beam doing the same DPS as the gun,
+                        // but its poison stacks with NO cap. Hits everything along the line.
+                        player.weaponCooldown = stats.cooldown;
+                        const range = 16 * TILE_SIZE * rangeMultiplier;
+                        const ex = player.x + Math.cos(angle) * range;
+                        const ey = player.y + Math.sin(angle) * range;
+                        const beamW = TILE_SIZE * 0.6;
+                        const perHitDmg = stats.damage * stats.bullets;
+                        const perHitTox = stats.toxicPerHit * stats.bullets;
+                        enemies.forEach(e => {
+                            if (distToSegment(e.x, e.y, player.x, player.y, ex, ey) <= beamW + enemyBodyBonus(e)) {
+                                applyDamageToEnemy(e, perHitDmg);
+                                e.toxicDps = (e.toxicDps || 0) + perHitTox;   // uncapped in laser mode
+                                e.toxicTimer = 2.5;
+                                if (e.toxicTick === undefined) e.toxicTick = 0;
+                            }
                         });
+                        projectiles.push({
+                            owner: 'toxlaser', x1: player.x, y1: player.y, x2: ex, y2: ey,
+                            life: 0.07, maxLife: 0.07, fromBoss: false
+                        });
+                        if (soundManager.shoot) soundManager.shoot();
                     } else {
-                        const spread = stats.spread;
+                        // TOXGUN / DualTox Mode 1: rapid toxic rounds with a slight random spread.
+                        player.weaponCooldown = stats.cooldown;
+                        const count = stats.bullets;
+                        // Poison ceiling recomputed each shot (tracks buffs).
+                        const directDps = stats.damage * stats.bullets / Math.max(0.001, stats.cooldown);
+                        toxgunCapDps = 1000 * directDps;
+                        soundManager.shoot();
                         for (let i = 0; i < count; i++) {
-                            const t = count === 1 ? 0 : i / (count - 1);
-                            const offset = (t - 0.5) * spread;
-                            const ang = baseAngle + offset;
-                            const vx = Math.cos(ang) * stats.bulletSpeed;
-                            const vy = Math.sin(ang) * stats.bulletSpeed;
+                            const ang = angle + (Math.random() - 0.5) * stats.spread;
                             projectiles.push({
-                                x: player.x,
-                                y: player.y,
-                                vx, vy,
-                                damage: stats.damage,
-                                owner: 'burst',
-                                life: 2 * rangeMultiplier, // extended
-                                bounces: 0,
-                                fromBoss: false,
-                                fromRanged: false,
-                                size: 4
+                                x: player.x, y: player.y,
+                                vx: Math.cos(ang) * stats.bulletSpeed,
+                                vy: Math.sin(ang) * stats.bulletSpeed,
+                                damage: stats.damage, toxic: stats.toxicPerHit,
+                                owner: 'toxbullet', life: 1.4 * rangeMultiplier,
+                                fromBoss: false, fromRanged: false, size: 3.5
                             });
                         }
                     }
@@ -6274,7 +6570,7 @@
                             const dx = e.x - player.x;
                             const dy = e.y - player.y;
                             const dist = Math.sqrt(dx * dx + dy * dy);
-                            if (dist <= wrenchRange + TILE_SIZE / 2) {
+                            if (dist <= wrenchRange + TILE_SIZE / 2 + enemyBodyBonus(e)) {
                                 const ang2 = Math.atan2(dy, dx);
                                 let diff = ang2 - angle;
                                 while (diff > Math.PI) diff -= 2 * Math.PI;
@@ -6697,6 +6993,19 @@
                                 }
                             }
                         }
+                    }
+
+                    // Toxgun poison: one shared DoT per enemy, ticked ~3×/sec (not per bullet,
+                    // so heavy fire never spikes the tick count). Its DPS keeps stacking from
+                    // hits, capped at 10× the gun's direct DPS.
+                    if (e.toxicDps && e.toxicDps > 0 && e.toxicTimer > 0) {
+                        e.toxicTimer -= dt;
+                        e.toxicTick = (e.toxicTick || 0) + dt;
+                        if (e.toxicTick >= 0.3) {         // ~3.3 ticks/second
+                            e.toxicTick -= 0.3;
+                            applyDamageToEnemy(e, e.toxicDps * 0.3);
+                        }
+                        if (e.toxicTimer <= 0) { e.toxicDps = 0; }
                     }
                 }
 
@@ -8331,6 +8640,25 @@
                         if (accShadowKillChance > 0 && Math.random() < accShadowKillChance) {
                             grantShadowCloakStat(accShadowKillAmt);
                         }
+                        // Necrotic Splash (DualTox Mode 2): a POISONED enemy that dies erupts,
+                        // spreading 50% of its poison DPS to enemies within 1.2× belt radius as
+                        // a fresh stack — a chain of poison detonations.
+                        if (necroticTimer > 0 && (e.toxicDps || 0) > 0) {
+                            const spread = e.toxicDps * 0.5;
+                            const nr = getBeltRadius() * 1.2;
+                            enemies.forEach(o => {
+                                if (o === e || o.hp <= 0) return;
+                                if (distance(e.x, e.y, o.x, o.y) <= nr + enemyBodyBonus(o)) {
+                                    o.toxicDps = (o.toxicDps || 0) + spread;   // new stack (uncapped)
+                                    o.toxicTimer = Math.max(o.toxicTimer || 0, 2.5);
+                                    if (o.toxicTick === undefined) o.toxicTick = 0;
+                                }
+                            });
+                            projectiles.push({
+                                owner: 'necroticBurst', x: e.x, y: e.y, vx: 0, vy: 0,
+                                radius: 0, maxRadius: nr, life: 0.4, maxLife: 0.4, damage: 0, fromBoss: false
+                            });
+                        }
 
                         const isBoss = isBossType(e.type);
                         if (isKronax(e.type)) {
@@ -8829,6 +9157,19 @@
                                 friendly: p.friendly, dmg: p.dmg
                             });
                             soundManager.kronaxTick();
+                        } else if (p.owner === 'toxparticle') {
+                            // Landed — small toxic burst + a little pool.
+                            toxExplode(p.x, p.y, p.partR || TILE_SIZE * 2.4, p.partDmg || 5, p.poolDps || 1, 4);
+                        } else if (p.owner === 'toxdragon') {
+                            // Flew its full range without hitting — burst at the end.
+                            toxExplode(p.x, p.y, p.blastR || TILE_SIZE * 6, p.damage || 10, p.poolDps || 1, 6);
+                            addShake(7, 0.35);
+                        } else if (p.owner === 'acidBeam') {
+                            // Crack the Sky laser reached its end — explode (its trails chain too).
+                            toxExplode(p.x, p.y, TILE_SIZE * 2.6, p.dmg || 8, p.poolDps || 1, 3);
+                        } else if (p.owner === 'giantPinball') {
+                            // Reached the end of its flight without hitting — burst anyway.
+                            explodeGiantPinball(p);
                         } else if (p.owner === 'timeOrb') {
                             spawnTimePulse(p.x, p.y, (p.damage || 4) * 0.6, TILE_SIZE * 2.4);
                         } else if (p.owner === 'timeBomb') {
@@ -8899,7 +9240,7 @@
                         if (p.friendly) {
                             for (let j = 0; j < enemies.length; j++) {
                                 const e = enemies[j];
-                                if (distance(p.x, p.y, e.x, e.y) < (p.size || 11) + TILE_SIZE * 0.3) {
+                                if (distance(p.x, p.y, e.x, e.y) < (p.size || 11) + TILE_SIZE * 0.3 + enemyBodyBonus(e)) {
                                     applyDamageToEnemy(e, p.dmg || 8);
                                     p.pierce = (p.pierce || 2) - 1;
                                     if (p.pierce <= 0) { projectiles.splice(i, 1); }
@@ -9225,17 +9566,18 @@
                         }
 
                     } else if (p.owner === 'shuriken') {
-                        let hitEnemy = null;
+                        let hitEnemy = null, hitD = 0, hitHr = 1;
                         for (let j = 0; j < enemies.length; j++) {
                             const e = enemies[j];
                             const d = distance(p.x, p.y, e.x, e.y);
-                            if (d < TILE_SIZE * 0.5) {
-                                hitEnemy = e;
+                            const hr = TILE_SIZE * 0.5 + enemyBodyBonus(e);
+                            if (d < hr) {
+                                hitEnemy = e; hitD = d; hitHr = hr;
                                 break;
                             }
                         }
                         if (hitEnemy) {
-                            applyDamageToEnemy(hitEnemy, p.damage);
+                            applyDamageToEnemy(hitEnemy, p.damage * centerBonus(hitD, hitHr));
                             p.locked = true;       // it has connected — now it homes
                             p.lastHit = hitEnemy;
                             if (p.bounces > 0) {
@@ -9259,17 +9601,22 @@
                                     p.vy = dy / mag * speed;
                                     p.damage = p.damage * 1.017 + 1;
                                     p.bounces--;
+                                } else {
+                                    // No OTHER target to bounce to (e.g. a lone boss): despawn
+                                    // instead of lingering and re-hitting the same target, which
+                                    // used to stack absurd single-target DPS.
+                                    projectiles.splice(i, 1);
+                                    continue;
                                 }
-                                // If no other enemy right now, keep flying — homing below will
-                                // steer it onto a new target instead of letting it despawn.
                             } else {
                                 projectiles.splice(i, 1);
                                 continue;
                             }
                         }
 
-                        // Once locked, continuously steer toward the nearest enemy so the
-                        // pinball never flies off into empty space after connecting.
+                        // Once locked, steer toward the nearest OTHER enemy so the pinball
+                        // keeps bouncing between distinct targets. It never re-homes onto the
+                        // last-hit enemy (that caused the single-target lingering bug).
                         if (p.locked && p.bounces > 0) {
                             let target = null, tDist = Infinity;
                             enemies.forEach(e => {
@@ -9277,13 +9624,6 @@
                                 const d = distance(p.x, p.y, e.x, e.y);
                                 if (d < tDist) { tDist = d; target = e; }
                             });
-                            if (!target) {
-                                // only the last-hit enemy remains (or none) — allow targeting it
-                                enemies.forEach(e => {
-                                    const d = distance(p.x, p.y, e.x, e.y);
-                                    if (d < tDist) { tDist = d; target = e; }
-                                });
-                            }
                             if (target) {
                                 const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy) || 1;
                                 const dx = target.x - p.x;
@@ -9300,33 +9640,192 @@
                             }
                         }
 
+                    } else if (p.owner === 'giantPinball') {
+                        p.spin = (p.spin || 0) + dt * 10;
+                        for (let j = 0; j < enemies.length; j++) {
+                            const e = enemies[j];
+                            if (distance(p.x, p.y, e.x, e.y) < (p.size || TILE_SIZE * 2) + enemyBodyBonus(e)) {
+                                applyDamageToEnemy(e, p.damage);
+                                explodeGiantPinball(p);
+                                projectiles.splice(i, 1);
+                                break;
+                            }
+                        }
+                        continue;
+
                     } else if (p.owner === 'burst' || p.owner === 'shotgun') {
-                        let hitEnemy = null;
+                        let hitEnemy = null, hitD = 0, hitHr = 1;
                         for (let j = 0; j < enemies.length; j++) {
                             const e = enemies[j];
                             const d = distance(p.x, p.y, e.x, e.y);
-                            if (d < TILE_SIZE * 0.5) {
-                                hitEnemy = e;
+                            const hr = TILE_SIZE * 0.5 + enemyBodyBonus(e);
+                            if (d < hr) {
+                                hitEnemy = e; hitD = d; hitHr = hr;
                                 break;
                             }
                         }
                         if (hitEnemy) {
-                            applyDamageToEnemy(hitEnemy, p.damage);
+                            applyDamageToEnemy(hitEnemy, p.damage * centerBonus(hitD, hitHr));
                             projectiles.splice(i, 1);
                         }
 
-                    } else if (p.owner === 'superStunShot') {
-                        let hitEnemy = null;
+                    } else if (p.owner === 'toxbullet') {
+                        // Toxgun round: small direct hit + adds a poison stack. The DoT itself
+                        // is applied by the shared toxic tick loop (kept cheap regardless of
+                        // how many bullets land), and is capped at 10× the gun's direct DPS.
+                        let hitEnemy = null, hitD = 0, hitHr = 1;
                         for (let j = 0; j < enemies.length; j++) {
                             const e = enemies[j];
                             const d = distance(p.x, p.y, e.x, e.y);
-                            if (d < TILE_SIZE * 0.45) {
-                                hitEnemy = e;
+                            const hr = TILE_SIZE * 0.5 + enemyBodyBonus(e);
+                            if (d < hr) { hitEnemy = e; hitD = d; hitHr = hr; break; }
+                        }
+                        if (hitEnemy) {
+                            applyDamageToEnemy(hitEnemy, p.damage * centerBonus(hitD, hitHr));
+                            hitEnemy.toxicDps = Math.min((hitEnemy.toxicDps || 0) + (p.toxic || 0), toxgunCapDps);
+                            hitEnemy.toxicTimer = 2.5;               // refreshed while you keep firing
+                            if (hitEnemy.toxicTick === undefined) hitEnemy.toxicTick = 0;
+                            projectiles.splice(i, 1);
+                        }
+
+                    } else if (p.owner === 'toxdragon') {
+                        // Trailing swirls: two spinning green wisps peeling off the tail.
+                        p.swirlTimer = (p.swirlTimer || 0) + dt;
+                        if (p.swirlTimer >= 0.025) {
+                            p.swirlTimer = 0;
+                            const ta = p.ang || Math.atan2(p.vy, p.vx);
+                            for (const side of [-1, 1]) {
+                                projectiles.push({
+                                    owner: 'toxswirl',
+                                    x: p.x - Math.cos(ta) * (p.size || 18) * 0.6,
+                                    y: p.y - Math.sin(ta) * (p.size || 18) * 0.6,
+                                    vx: Math.cos(ta + side * 1.5) * 55, vy: Math.sin(ta + side * 1.5) * 55,
+                                    life: 0.5, maxLife: 0.5, size: 3 + Math.random() * 3,
+                                    spin: Math.random() * Math.PI * 2, spinDir: side, fromBoss: false
+                                });
+                            }
+                        }
+                        // Big toxic bullet: bursts on the first enemy it touches.
+                        for (let j = 0; j < enemies.length; j++) {
+                            const e = enemies[j];
+                            if (distance(p.x, p.y, e.x, e.y) < (p.size || 16) + TILE_SIZE * 0.4 + enemyBodyBonus(e)) {
+                                toxExplode(p.x, p.y, p.blastR || TILE_SIZE * 6, p.damage || 10, p.poolDps || 1, 6);
+                                addShake(7, 0.35);
+                                projectiles.splice(i, 1);
+                                break;
+                            }
+                        }
+                        continue;
+
+                    } else if (p.owner === 'toxpool') {
+                        // Lingering pool: deals FLAT set damage (~3×/sec) to enemies inside —
+                        // it does NOT stack the gun's toxic, so it can't runaway.
+                        p.tickTimer = (p.tickTimer || 0) + dt;
+                        if (p.tickTimer >= 0.3) {
+                            p.tickTimer -= 0.3;
+                            const tick = (p.poolDps || 0) * 0.3;
+                            for (let j = 0; j < enemies.length; j++) {
+                                const e = enemies[j];
+                                if (distance(p.x, p.y, e.x, e.y) <= p.radius + enemyBodyBonus(e)) {
+                                    applyDamageToEnemy(e, tick, { aoe: true });
+                                }
+                            }
+                        }
+                        continue;
+
+                    } else if (p.owner === 'acidDrop') {
+                        // Mortar shell: arcs under gravity, then lands on its target.
+                        p.vy += (p.gravity || 2600) * dt;
+                        p.flightT = (p.flightT || 0) + dt;
+                        if (p.flightT >= (p.flightMax || 1)) {
+                            const lx = (p.targetX !== undefined) ? p.targetX : p.x;
+                            const ly = (p.targetY !== undefined) ? p.targetY : p.y;
+                            const r = TILE_SIZE * 2.2;
+                            enemies.forEach(e => {
+                                if (distance(lx, ly, e.x, e.y) <= r + enemyBodyBonus(e)) applyDamageToEnemy(e, p.dmg || 10, { aoe: true });
+                            });
+                            spawnToxPool(lx, ly, r, p.poolDps || 1, 6);
+                            projectiles.push({
+                                owner: 'acidCloud', x: lx, y: ly, vx: 0, vy: 0,
+                                radius: r * 1.15, poolDps: (p.poolDps || 1) * 0.6,
+                                life: 4.5, maxLife: 4.5, tickTimer: 0, fromBoss: false
+                            });
+                            projectiles.push({
+                                owner: 'toxblast', x: lx, y: ly, vx: 0, vy: 0,
+                                radius: 0, maxRadius: r, life: 0.35, maxLife: 0.35, damage: 0, fromBoss: false
+                            });
+                            if (soundManager.explosion) soundManager.explosion();
+                            projectiles.splice(i, 1);
+                        }
+                        continue;
+
+                    } else if (p.owner === 'acidCloud') {
+                        // Lingering corrosive cloud: flat damage to enemies inside (~2.5×/sec).
+                        p.tickTimer = (p.tickTimer || 0) + dt;
+                        if (p.tickTimer >= 0.4) {
+                            p.tickTimer -= 0.4;
+                            const tick = (p.poolDps || 0) * 0.4;
+                            for (let j = 0; j < enemies.length; j++) {
+                                const e = enemies[j];
+                                if (distance(p.x, p.y, e.x, e.y) <= p.radius + enemyBodyBonus(e)) {
+                                    applyDamageToEnemy(e, tick, { aoe: true });
+                                }
+                            }
+                        }
+                        continue;
+
+                    } else if (p.owner === 'acidBeam') {
+                        // Crack the Sky laser head: flies out dropping acid-trail segments and
+                        // grazing enemies; it explodes at the end of its flight (handled on expiry).
+                        p.trailTimer = (p.trailTimer || 0) + dt;
+                        if (p.trailTimer >= 0.05) {
+                            p.trailTimer -= 0.05;
+                            p.seq = (p.seq || 0) + 1;
+                            projectiles.push({
+                                owner: 'crackTrail', x: p.x, y: p.y, vx: 0, vy: 0,
+                                radius: TILE_SIZE * 1.3, poolDps: p.poolDps, dmg: p.dmg * 0.5,
+                                fuse: 0.35 + p.seq * 0.05,   // detonate outward in a chain
+                                life: 4, maxLife: 4, tickTimer: 0, fromBoss: false
+                            });
+                        }
+                        for (let j = 0; j < enemies.length; j++) {
+                            const e = enemies[j];
+                            if (distance(p.x, p.y, e.x, e.y) < TILE_SIZE * 0.7 + enemyBodyBonus(e)) {
+                                applyDamageToEnemy(e, p.dmg * 0.3);
+                            }
+                        }
+                        continue;
+
+                    } else if (p.owner === 'crackTrail') {
+                        // A laid acid segment: light pool damage, then chain-explodes on its fuse.
+                        p.tickTimer = (p.tickTimer || 0) + dt;
+                        if (p.tickTimer >= 0.3) {
+                            p.tickTimer -= 0.3;
+                            for (let j = 0; j < enemies.length; j++) {
+                                const e = enemies[j];
+                                if (distance(p.x, p.y, e.x, e.y) <= p.radius + enemyBodyBonus(e)) applyDamageToEnemy(e, (p.poolDps || 0) * 0.3, { aoe: true });
+                            }
+                        }
+                        p.fuse -= dt;
+                        if (p.fuse <= 0) {
+                            toxExplode(p.x, p.y, p.radius * 1.4, p.dmg || 5, p.poolDps || 1, 3);
+                            projectiles.splice(i, 1);
+                        }
+                        continue;
+
+                    } else if (p.owner === 'superStunShot') {
+                        let hitEnemy = null, hitD = 0, hitHr = 1;
+                        for (let j = 0; j < enemies.length; j++) {
+                            const e = enemies[j];
+                            const d = distance(p.x, p.y, e.x, e.y);
+                            const hr = TILE_SIZE * 0.45 + enemyBodyBonus(e);
+                            if (d < hr) {
+                                hitEnemy = e; hitD = d; hitHr = hr;
                                 break;
                             }
                         }
                         if (hitEnemy) {
-                            applyDamageToEnemy(hitEnemy, p.damage || 1);
+                            applyDamageToEnemy(hitEnemy, (p.damage || 1) * centerBonus(hitD, hitHr));
                             hitEnemy.stunTimer = Math.max(hitEnemy.stunTimer || 0, p.stunDuration || 1.4);
                             projectiles.splice(i, 1);
                         }
@@ -9335,8 +9834,9 @@
                         for (let j = 0; j < enemies.length && i >= 0; j++) {
                             const e = enemies[j];
                             const d = distance(p.x, p.y, e.x, e.y);
-                            if (d < TILE_SIZE * 0.5) {
-                                applyDamageToEnemy(e, p.damage);
+                            const hr = TILE_SIZE * 0.5 + enemyBodyBonus(e);
+                            if (d < hr) {
+                                applyDamageToEnemy(e, p.damage * centerBonus(d, hr));
                                 p.penetration--;
                                 if (p.penetration <= 0) {
                                     projectiles.splice(i, 1);
@@ -9349,8 +9849,9 @@
                         for (let j = 0; j < enemies.length && i >= 0; j++) {
                             const e = enemies[j];
                             const d = distance(p.x, p.y, e.x, e.y);
-                            if (d < TILE_SIZE * 0.55) {
-                                applyDamageToEnemy(e, p.damage);
+                            const hr = TILE_SIZE * 0.55 + enemyBodyBonus(e);
+                            if (d < hr) {
+                                applyDamageToEnemy(e, p.damage * centerBonus(d, hr));
                                 p.penetration--;
                                 if (p.penetration <= 0) {
                                     spawnTimePulse(p.x, p.y, p.damage * 0.6, TILE_SIZE * 2.4);
@@ -9395,7 +9896,7 @@
                             let nvy = p.vy * (1 - steer) + (ty / tm * sp) * steer;
                             const nm = Math.sqrt(nvx * nvx + nvy * nvy) || 1;
                             p.vx = nvx / nm * sp; p.vy = nvy / nm * sp;
-                            if (bd < TILE_SIZE * 0.6) {
+                            if (bd < TILE_SIZE * 0.6 + enemyBodyBonus(best)) {
                                 spawnTimePulse(p.x, p.y, p.damage, p.radius);
                                 enemies.forEach(e => { if (distance(p.x, p.y, e.x, e.y) <= p.radius) applyDamageToEnemy(e, p.damage, { aoe: true }); });
                                 projectiles.splice(i, 1);
@@ -9418,10 +9919,10 @@
                         for (let j = 0; j < enemies.length && p.pierce >= 0; j++) {
                             const e = enemies[j];
                             if (p.hitTargets.has(e)) continue;
-                            const hr = TILE_SIZE * 0.6 + (e.radius || 0);
+                            const hr = TILE_SIZE * 0.6 + enemyBodyBonus(e);
                             if (distance(p.x, p.y, e.x, e.y) < hr) {
                                 p.hitTargets.add(e);
-                                applyDamageToEnemy(e, p.damage);
+                                applyDamageToEnemy(e, p.damage * centerBonus(distance(p.x, p.y, e.x, e.y), hr));
                                 applyCryoHit(e, p.damage, p.freezeThreshold);
                                 p.pierce--;
                             }
@@ -9432,7 +9933,7 @@
                         p.spin = (p.spin || 0) + dt * 12;
                         let hit = false;
                         for (let j = 0; j < enemies.length; j++) {
-                            if (distance(p.x, p.y, enemies[j].x, enemies[j].y) < TILE_SIZE * 0.7 + (enemies[j].radius || 0)) { hit = true; break; }
+                            if (distance(p.x, p.y, enemies[j].x, enemies[j].y) < TILE_SIZE * 0.7 + enemyBodyBonus(enemies[j])) { hit = true; break; }
                         }
                         if (hit) { detonateMolotov(p); projectiles.splice(i, 1); continue; }
 
@@ -9441,7 +9942,7 @@
                         for (let j = 0; j < enemies.length; j++) {
                             const e = enemies[j];
                             if (p.hitTargets.has(e)) continue;
-                            if (distance(p.x, p.y, e.x, e.y) < (p.size || TILE_SIZE) + (e.radius || 0)) {
+                            if (distance(p.x, p.y, e.x, e.y) < (p.size || TILE_SIZE) + enemyBodyBonus(e)) {
                                 p.hitTargets.add(e);
                                 applyDamageToEnemy(e, p.damage);
                             }
@@ -9547,17 +10048,18 @@
                         }
 
                     } else if (p.owner === 'turretBullet') {
-                        let hitEnemy = null;
+                        let hitEnemy = null, hitD = 0, hitHr = 1;
                         for (let j = 0; j < enemies.length; j++) {
                             const e = enemies[j];
                             const d = distance(p.x, p.y, e.x, e.y);
-                            if (d < TILE_SIZE * 0.5) {
-                                hitEnemy = e;
+                            const hr = TILE_SIZE * 0.5 + enemyBodyBonus(e);
+                            if (d < hr) {
+                                hitEnemy = e; hitD = d; hitHr = hr;
                                 break;
                             }
                         }
                         if (hitEnemy) {
-                            hitEnemy.hp -= p.damage;
+                            hitEnemy.hp -= p.damage * centerBonus(hitD, hitHr);
                             if (p.sourceTurret) {
                                 applyTurretLifeSteal(p.sourceTurret, p.damage);
                             }
@@ -9627,17 +10129,18 @@
 
                         // Check for hits — hit radius scales with the boomerang's size
                         const hitR = TILE_SIZE * 1.0 * (p.scale || 1);
-                        let hitEnemy = null;
+                        let hitEnemy = null, hitD = 0, hitHr = 1;
                         for (let j = 0; j < enemies.length; j++) {
                             const e = enemies[j];
                             const d = distance(p.x, p.y, e.x, e.y);
-                            if (d < hitR) {
-                                hitEnemy = e;
+                            const hr = hitR + enemyBodyBonus(e);
+                            if (d < hr) {
+                                hitEnemy = e; hitD = d; hitHr = hr;
                                 break;
                             }
                         }
                         if (hitEnemy && p.hitCount < p.maxHits) {
-                            const damage = p.damage * Math.pow(p.hitMultiplier, p.hitCount);
+                            const damage = p.damage * Math.pow(p.hitMultiplier, p.hitCount) * centerBonus(hitD, hitHr);
                             applyDamageToEnemy(hitEnemy, damage);
                             p.hitCount++;
                         }
@@ -9880,13 +10383,36 @@
                         // Multiplying by 60*dt reproduces the original 60fps feel at any refresh rate.
                         const frostMul = (player.frostSlowTimer && player.frostSlowTimer > 0) ? 0.45 : 1;
                         const chargeMul = cryoNovaCharging ? 0.15 : 1;   // Absolute Zero: crawl while charging
-                        const moveStep = player.speed * 60 * dt * frostMul * chargeMul;
+                        const ignMul = ignitionActive() ? 1.5 : 1;   // DualTox Ignition: move faster
+                        const stunMul = ((player.switchStun || 0) > 0) ? 0 : 1;   // frozen mid mode-switch
+                        const moveStep = player.speed * 60 * dt * frostMul * chargeMul * ignMul * stunMul;
                         player.x += moveX * moveStep;
                         player.y += moveY * moveStep;
                     }
                 }
+                // Knockback impulse (e.g. Giant Pinball recoil): slides the player and decays.
+                if (player.knockVx || player.knockVy) {
+                    player.x += player.knockVx * dt;
+                    player.y += player.knockVy * dt;
+                    const kd = Math.pow(0.0009, dt); // ~0.15s time constant
+                    player.knockVx *= kd;
+                    player.knockVy *= kd;
+                    if (Math.abs(player.knockVx) < 2 && Math.abs(player.knockVy) < 2) { player.knockVx = 0; player.knockVy = 0; }
+                }
                 if (player.frostSlowTimer && player.frostSlowTimer > 0) player.frostSlowTimer -= dt;
                 if (player.poisonDebuffTimer && player.poisonDebuffTimer > 0) player.poisonDebuffTimer -= dt;
+                if (player.switchStun && player.switchStun > 0) player.switchStun -= dt;
+                if (modeSwitchCd > 0) modeSwitchCd -= dt;
+                if (necroticTimer > 0) necroticTimer -= dt;
+                // Acid Rain: launch queued mortars one at a time so their landing rings appear
+                // slowly one by one rather than all at once.
+                if (pendingMortars.length > 0) {
+                    mortarLaunchTimer -= dt;
+                    while (mortarLaunchTimer <= 0 && pendingMortars.length > 0) {
+                        mortarLaunchTimer += 0.14;
+                        launchAcidMortar(pendingMortars.shift());
+                    }
+                }
 
                 // Kronax "time-rot" damage-over-time: ticks % of max HP every 0.5s.
                 if (player.timeDotTimer && player.timeDotTimer > 0) {
@@ -9906,6 +10432,21 @@
                 for (let ai = 0; ai < abilityActiveTimer.length; ai++) {
                     if (abilityActiveTimer[ai] > 0) abilityActiveTimer[ai] = Math.max(0, abilityActiveTimer[ai] - dt);
                     if (abilityCooldown[ai] > 0) abilityCooldown[ai] = Math.max(0, abilityCooldown[ai] - dt);
+                }
+                // DualTox Ignition: green flames scorch nearby enemies (~4×/sec).
+                if (ignitionActive()) {
+                    ignitionAuraTimer = (ignitionAuraTimer || 0) + dt;
+                    if (ignitionAuraTimer >= 0.25) {
+                        ignitionAuraTimer -= 0.25;
+                        const auraR = TILE_SIZE * 2.6;
+                        const s = getToxgunStats();
+                        const scorch = s.damage * 1.5;
+                        enemies.forEach(e => {
+                            if (distance(player.x, player.y, e.x, e.y) <= auraR + enemyBodyBonus(e)) {
+                                applyDamageToEnemy(e, scorch, { aoe: true });
+                            }
+                        });
+                    }
                 }
                 // Absolute Zero charge (Cryo-Shatter ability 2): tick, hum, then release.
                 if (cryoNovaCharging) {
@@ -10061,7 +10602,7 @@
 
                 player.weaponCooldown = Math.max(0, player.weaponCooldown - dt);
 
-                if (mouseDown && !gameOver && player.weapon) {
+                if (mouseDown && !gameOver && player.weapon && !(player.switchStun > 0)) {
                     tryAttack();
                 }
 
@@ -10501,6 +11042,28 @@
                         ctx.beginPath();
                         ctx.arc(sx + Math.cos(ga) * s * 0.42, sy + Math.sin(ga) * s * 0.42, s * 0.2, 0, Math.PI * 2);
                         ctx.fill();
+                    } else if (p.owner === 'giantPinball') {
+                        // A huge chrome pinball with heavy shine and a spinning glint.
+                        const s = p.size || TILE_SIZE * 2;
+                        const tint = projectileSkinRgb('shuriken', "200,210,225");
+                        drawProjectileTrail(p, sx, sy, tint);
+                        ctx.save();
+                        ctx.shadowColor = "rgba(255,255,255,0.5)"; ctx.shadowBlur = 16;
+                        const grad = ctx.createRadialGradient(sx - s * 0.35, sy - s * 0.35, s * 0.12, sx, sy, s);
+                        grad.addColorStop(0, "#ffffff");
+                        grad.addColorStop(0.45, `rgb(${tint})`);
+                        grad.addColorStop(1, "#2a2f3a");
+                        ctx.fillStyle = grad;
+                        ctx.beginPath(); ctx.arc(sx, sy, s, 0, Math.PI * 2); ctx.fill();
+                        ctx.shadowBlur = 0;
+                        ctx.strokeStyle = "rgba(255,255,255,0.6)"; ctx.lineWidth = 2;
+                        ctx.beginPath(); ctx.arc(sx, sy, s, 0, Math.PI * 2); ctx.stroke();
+                        const ga = (p.spin || 0) * 2;
+                        ctx.fillStyle = "rgba(255,255,255,0.92)";
+                        ctx.beginPath();
+                        ctx.arc(sx + Math.cos(ga) * s * 0.4, sy + Math.sin(ga) * s * 0.4, s * 0.18, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
                     } else if (p.owner === 'superStunShot') {
                         drawProjectileTrail(p, sx, sy, "120,220,255");
                         const s = p.size || 4;
@@ -10516,6 +11079,235 @@
                         ctx.beginPath();
                         ctx.arc(sx, sy, r, 0, Math.PI * 2);
                         ctx.fill();
+                    } else if (p.owner === 'toxbullet') {
+                        // Toxic round: a glowing green droplet with a faint toxic trail.
+                        const r = p.size || 3.5;
+                        drawProjectileTrail(p, sx, sy, "90,255,120");
+                        ctx.save();
+                        ctx.shadowColor = "rgba(90,255,120,0.9)"; ctx.shadowBlur = 8;
+                        const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r + 1.5);
+                        g.addColorStop(0, "rgba(220,255,210,0.95)");
+                        g.addColorStop(0.5, "rgba(90,230,90,0.95)");
+                        g.addColorStop(1, "rgba(40,140,50,0.2)");
+                        ctx.fillStyle = g;
+                        ctx.beginPath(); ctx.arc(sx, sy, r + 1.5, 0, Math.PI * 2); ctx.fill();
+                        ctx.restore();
+                    } else if (p.owner === 'toxparticle') {
+                        // Flung toxic blob with a trail.
+                        const r = p.size || 5;
+                        drawProjectileTrail(p, sx, sy, "120,230,90");
+                        ctx.save();
+                        ctx.shadowColor = "rgba(120,255,90,0.9)"; ctx.shadowBlur = 8;
+                        const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
+                        g.addColorStop(0, "rgba(220,255,190,0.95)");
+                        g.addColorStop(0.6, "rgba(110,210,70,0.95)");
+                        g.addColorStop(1, "rgba(40,120,40,0.15)");
+                        ctx.fillStyle = g;
+                        ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
+                        ctx.restore();
+                    } else if (p.owner === 'toxpool') {
+                        // Bubbling toxic puddle on the ground, fading as it expires.
+                        const a = Math.max(0, Math.min(1, p.life / (p.maxLife || 6)));
+                        ctx.save();
+                        const g = ctx.createRadialGradient(sx, sy, p.radius * 0.2, sx, sy, p.radius);
+                        g.addColorStop(0, `rgba(120,220,70,${0.34 * a})`);
+                        g.addColorStop(0.7, `rgba(70,170,50,${0.26 * a})`);
+                        g.addColorStop(1, `rgba(40,110,40,0)`);
+                        ctx.fillStyle = g;
+                        ctx.beginPath(); ctx.arc(sx, sy, p.radius, 0, Math.PI * 2); ctx.fill();
+                        // slow bubbles
+                        ctx.fillStyle = `rgba(190,255,150,${0.5 * a})`;
+                        for (let k = 0; k < 5; k++) {
+                            const ba = (k / 5) * Math.PI * 2 + runTime * 1.3 + p.x * 0.01;
+                            const br = p.radius * (0.3 + 0.5 * ((k * 0.37 + runTime * 0.4) % 1));
+                            ctx.beginPath();
+                            ctx.arc(sx + Math.cos(ba) * br, sy + Math.sin(ba) * br, 1.6, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        ctx.restore();
+                    } else if (p.owner === 'acidDrop') {
+                        // Arcing mortar shell + a target ring on the ground so it's visible.
+                        const gx = (p.targetX !== undefined ? p.targetX : p.x) - cameraX;
+                        const gy = (p.targetY !== undefined ? p.targetY : p.y) - cameraY;
+                        const prog = Math.min(1, (p.flightT || 0) / (p.flightMax || 1));
+                        ctx.save();
+                        // ground telegraph (tightens as the shell nears impact)
+                        ctx.strokeStyle = `rgba(150,255,110,${0.4 + 0.4 * prog})`; ctx.lineWidth = 2;
+                        ctx.beginPath(); ctx.arc(gx, gy, TILE_SIZE * 2.2, 0, Math.PI * 2); ctx.stroke();
+                        ctx.strokeStyle = `rgba(160,255,120,${0.6 * prog})`;
+                        ctx.beginPath(); ctx.arc(gx, gy, TILE_SIZE * 2.2 * (1 - prog), 0, Math.PI * 2); ctx.stroke();
+                        // smoke trail behind the shell
+                        drawProjectileTrail(p, sx, sy, "120,230,90");
+                        // the shell (glowing acid canister)
+                        ctx.shadowColor = "rgba(120,255,90,0.9)"; ctx.shadowBlur = 10;
+                        const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, (p.size || 8) + 2);
+                        g.addColorStop(0, "rgba(230,255,190,0.98)");
+                        g.addColorStop(0.6, "rgba(110,210,70,0.95)");
+                        g.addColorStop(1, "rgba(40,120,40,0.2)");
+                        ctx.fillStyle = g;
+                        ctx.beginPath(); ctx.arc(sx, sy, (p.size || 8), 0, Math.PI * 2); ctx.fill();
+                        ctx.restore();
+                    } else if (p.owner === 'acidCloud') {
+                        // Hazy corrosive cloud, fading as it expires.
+                        const a = Math.max(0, Math.min(1, p.life / (p.maxLife || 4.5)));
+                        ctx.save();
+                        for (let k = 0; k < 6; k++) {
+                            const ba = (k / 6) * Math.PI * 2 + runTime * 0.6 + p.x * 0.01;
+                            const br = p.radius * 0.55;
+                            const cxp = sx + Math.cos(ba) * br * (0.4 + 0.3 * Math.sin(runTime + k));
+                            const cyp = sy + Math.sin(ba) * br * (0.4 + 0.3 * Math.cos(runTime + k));
+                            const g = ctx.createRadialGradient(cxp, cyp, 0, cxp, cyp, p.radius * 0.6);
+                            g.addColorStop(0, `rgba(150,235,110,${0.16 * a})`);
+                            g.addColorStop(1, `rgba(70,160,50,0)`);
+                            ctx.fillStyle = g;
+                            ctx.beginPath(); ctx.arc(cxp, cyp, p.radius * 0.6, 0, Math.PI * 2); ctx.fill();
+                        }
+                        ctx.restore();
+                    } else if (p.owner === 'toxlaser') {
+                        // Acid laser beam (DualTox Mode 2): a bright green line that flashes out.
+                        const a = Math.max(0, p.life / (p.maxLife || 0.07));
+                        const x1 = p.x1 - cameraX, y1 = p.y1 - cameraY, x2 = p.x2 - cameraX, y2 = p.y2 - cameraY;
+                        ctx.save();
+                        ctx.lineCap = 'round';
+                        ctx.shadowColor = "rgba(120,255,90,0.9)"; ctx.shadowBlur = 14;
+                        ctx.strokeStyle = `rgba(90,220,60,${0.5 * a})`; ctx.lineWidth = 14;
+                        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+                        ctx.strokeStyle = `rgba(180,255,140,${0.9 * a})`; ctx.lineWidth = 5;
+                        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+                        ctx.strokeStyle = `rgba(240,255,220,${a})`; ctx.lineWidth = 2;
+                        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+                        ctx.restore();
+                    } else if (p.owner === 'acidBeam') {
+                        // Crack the Sky laser head: a glowing green comet.
+                        drawProjectileTrail(p, sx, sy, "120,240,80");
+                        ctx.save();
+                        ctx.shadowColor = "rgba(120,255,90,0.95)"; ctx.shadowBlur = 12;
+                        const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, 9);
+                        g.addColorStop(0, "rgba(235,255,200,0.98)");
+                        g.addColorStop(0.5, "rgba(120,235,80,0.95)");
+                        g.addColorStop(1, "rgba(40,130,40,0.15)");
+                        ctx.fillStyle = g;
+                        ctx.beginPath(); ctx.arc(sx, sy, 7, 0, Math.PI * 2); ctx.fill();
+                        ctx.restore();
+                    } else if (p.owner === 'crackTrail') {
+                        // A pooled acid segment waiting to detonate (brightens as its fuse runs out).
+                        const hot = 1 - Math.max(0, Math.min(1, (p.fuse || 0) / 1.4));
+                        ctx.save();
+                        const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, p.radius);
+                        g.addColorStop(0, `rgba(${150 + 90 * hot},255,${110 - 40 * hot},${0.4 + 0.3 * hot})`);
+                        g.addColorStop(1, "rgba(50,140,50,0)");
+                        ctx.fillStyle = g;
+                        ctx.beginPath(); ctx.arc(sx, sy, p.radius, 0, Math.PI * 2); ctx.fill();
+                        ctx.restore();
+                    } else if (p.owner === 'necroticBurst') {
+                        // Dark-acid eruption ring for Necrotic Splash / poisoned-death explosions.
+                        const alpha = Math.max(0, p.life / (p.maxLife || 0.4));
+                        const rr = (p.maxRadius || TILE_SIZE * 5) * Math.sqrt(1 - alpha);
+                        ctx.save();
+                        const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, Math.max(1, rr));
+                        g.addColorStop(0, `rgba(120,180,70,${alpha * 0.4})`);
+                        g.addColorStop(0.6, `rgba(60,110,40,${alpha * 0.28})`);
+                        g.addColorStop(1, `rgba(25,60,25,0)`);
+                        ctx.fillStyle = g;
+                        ctx.beginPath(); ctx.arc(sx, sy, rr, 0, Math.PI * 2); ctx.fill();
+                        ctx.strokeStyle = `rgba(90,160,60,${alpha})`; ctx.lineWidth = 3;
+                        ctx.shadowColor = "rgba(60,140,40,0.8)"; ctx.shadowBlur = 12;
+                        ctx.beginPath(); ctx.arc(sx, sy, rr, 0, Math.PI * 2); ctx.stroke();
+                        ctx.restore();
+                    } else if (p.owner === 'toxblast') {
+                        // Expanding green shock ring from a toxic explosion.
+                        const alpha = Math.max(0, p.life / (p.maxLife || 0.4));
+                        const rr = (p.maxRadius || TILE_SIZE * 4) * Math.sqrt(1 - alpha);
+                        ctx.save();
+                        const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, Math.max(1, rr));
+                        g.addColorStop(0, `rgba(200,255,160,${alpha * 0.5})`);
+                        g.addColorStop(0.6, `rgba(110,210,70,${alpha * 0.25})`);
+                        g.addColorStop(1, `rgba(90,200,70,0)`);
+                        ctx.fillStyle = g;
+                        ctx.beginPath(); ctx.arc(sx, sy, rr, 0, Math.PI * 2); ctx.fill();
+                        ctx.strokeStyle = `rgba(170,255,120,${alpha})`; ctx.lineWidth = 3;
+                        ctx.shadowColor = "rgba(120,255,90,0.8)"; ctx.shadowBlur = 12;
+                        ctx.beginPath(); ctx.arc(sx, sy, rr, 0, Math.PI * 2); ctx.stroke();
+                        ctx.restore();
+                    } else if (p.owner === 'toxdragon') {
+                        // A toxic dragon HEAD: horned snout, jaws with teeth, glowing eye.
+                        const s = p.size || 18;
+                        const ang = p.ang || Math.atan2(p.vy, p.vx);
+                        drawProjectileTrail(p, sx, sy, "110,240,80");
+                        ctx.save();
+                        ctx.translate(sx, sy); ctx.rotate(ang);
+                        ctx.shadowColor = "rgba(120,255,90,0.95)"; ctx.shadowBlur = 18;
+
+                        // swept-back neck frills / wings
+                        ctx.fillStyle = "rgba(60,160,45,0.8)";
+                        ctx.beginPath();
+                        ctx.moveTo(-s * 0.25, 0); ctx.lineTo(-s * 1.15, -s * 0.95); ctx.lineTo(-s * 0.05, -s * 0.25);
+                        ctx.closePath(); ctx.fill();
+                        ctx.beginPath();
+                        ctx.moveTo(-s * 0.25, 0); ctx.lineTo(-s * 1.15, s * 0.95); ctx.lineTo(-s * 0.05, s * 0.25);
+                        ctx.closePath(); ctx.fill();
+
+                        // head/skull (rounded back, tapering to a snout at +x)
+                        const g = ctx.createRadialGradient(-s * 0.1, 0, s * 0.12, s * 0.5, 0, s * 1.25);
+                        g.addColorStop(0, "rgba(225,255,190,0.98)");
+                        g.addColorStop(0.5, "rgba(120,230,80,0.98)");
+                        g.addColorStop(1, "rgba(35,120,35,0.55)");
+                        ctx.fillStyle = g;
+                        ctx.beginPath();
+                        ctx.moveTo(s * 1.35, -s * 0.06);                 // snout tip
+                        ctx.quadraticCurveTo(s * 0.5, -s * 0.62, -s * 0.2, -s * 0.5);  // top of skull
+                        ctx.quadraticCurveTo(-s * 0.75, -s * 0.2, -s * 0.7, 0);        // back
+                        ctx.quadraticCurveTo(-s * 0.75, s * 0.2, -s * 0.2, s * 0.5);   // bottom of skull
+                        ctx.quadraticCurveTo(s * 0.5, s * 0.55, s * 1.05, s * 0.14);   // lower jaw
+                        ctx.closePath(); ctx.fill();
+
+                        // horns (two, sweeping back from the crown)
+                        ctx.strokeStyle = "rgba(220,255,190,0.95)"; ctx.lineWidth = Math.max(1.5, s * 0.11);
+                        ctx.lineCap = 'round';
+                        for (const hs of [-1, 1]) {
+                            ctx.beginPath();
+                            ctx.moveTo(-s * 0.05, hs * s * 0.42);
+                            ctx.quadraticCurveTo(-s * 0.7, hs * s * 0.5, -s * 0.95, hs * s * 0.15);
+                            ctx.stroke();
+                        }
+                        ctx.lineCap = 'butt';
+
+                        // jaw line + teeth
+                        ctx.strokeStyle = "rgba(30,90,30,0.9)"; ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.moveTo(s * 1.3, 0); ctx.quadraticCurveTo(s * 0.5, s * 0.16, -s * 0.1, s * 0.12);
+                        ctx.stroke();
+                        ctx.fillStyle = "rgba(255,255,255,0.95)";
+                        for (let k = 0; k < 4; k++) {
+                            const tx = s * (1.0 - k * 0.28);
+                            ctx.beginPath();
+                            ctx.moveTo(tx, s * 0.1); ctx.lineTo(tx - s * 0.06, s * 0.26); ctx.lineTo(tx + s * 0.08, s * 0.12);
+                            ctx.closePath(); ctx.fill();
+                        }
+
+                        // nostril + glowing eye
+                        ctx.fillStyle = "rgba(20,70,20,0.9)";
+                        ctx.beginPath(); ctx.arc(s * 1.12, -s * 0.14, s * 0.07, 0, Math.PI * 2); ctx.fill();
+                        ctx.fillStyle = "rgba(255,255,180,0.98)";
+                        ctx.beginPath(); ctx.arc(s * 0.42, -s * 0.22, s * 0.14, 0, Math.PI * 2); ctx.fill();
+                        ctx.fillStyle = "rgba(20,60,20,1)";
+                        ctx.beginPath(); ctx.ellipse(s * 0.44, -s * 0.22, s * 0.04, s * 0.1, 0, 0, Math.PI * 2); ctx.fill();
+                        ctx.restore();
+                    } else if (p.owner === 'toxswirl') {
+                        // A little spinning green wisp peeling off the dragon's tail.
+                        const a = Math.max(0, p.life / (p.maxLife || 0.5));
+                        const s = (p.size || 4) * (0.6 + 0.4 * a);
+                        const rot = (p.spin || 0) + runTime * 9 * (p.spinDir || 1);
+                        ctx.save();
+                        ctx.translate(sx, sy); ctx.rotate(rot);
+                        ctx.strokeStyle = `rgba(150,255,110,${0.7 * a})`;
+                        ctx.lineWidth = Math.max(1, s * 0.5);
+                        ctx.lineCap = 'round';
+                        ctx.shadowColor = "rgba(120,255,90,0.7)"; ctx.shadowBlur = 6;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, s, -0.4, Math.PI * 1.15);   // comma/swirl arc
+                        ctx.stroke();
+                        ctx.restore();
                     } else if (p.owner === 'frostShard') {
                         const s = p.size || 8;
                         const tint = projectileSkinRgb('frostShard', "150,220,255");
@@ -12178,12 +12970,60 @@
                 if (!stats) return;
                 const sx = WIDTH / 2;
                 const sy = HEIGHT / 2;
+                const r = stats.radius;
+                const half = stats.arc / 2;
+                const th = stats.thickness;
+                const a0 = shieldAngle - half, a1 = shieldAngle + half;
+                const pulse = 0.5 + 0.5 * Math.sin(runTime * 5);
                 ctx.save();
+
+                // Soft energy glow behind the plate
                 ctx.beginPath();
-                ctx.arc(sx, sy, stats.radius, shieldAngle - stats.arc / 2, shieldAngle + stats.arc / 2);
-                ctx.strokeStyle = "rgba(0,200,255,0.85)";
-                ctx.lineWidth = stats.thickness;
+                ctx.arc(sx, sy, r, a0, a1);
+                ctx.strokeStyle = `rgba(90,200,255,${0.18 + 0.12 * pulse})`;
+                ctx.lineWidth = th * 3.2;
+                ctx.lineCap = 'round';
+                ctx.shadowColor = 'rgba(80,200,255,0.9)';
+                ctx.shadowBlur = 16;
                 ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                // Curved metallic/energy plate: gradient across its thickness
+                const grad = ctx.createRadialGradient(sx, sy, r - th, sx, sy, r + th);
+                grad.addColorStop(0, 'rgba(10,60,90,0.85)');
+                grad.addColorStop(0.5, 'rgba(120,225,255,0.95)');
+                grad.addColorStop(1, 'rgba(20,90,130,0.85)');
+                ctx.beginPath();
+                ctx.arc(sx, sy, r, a0, a1);
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = th;
+                ctx.lineCap = 'butt';
+                ctx.stroke();
+
+                // Bright leading rim highlight
+                ctx.beginPath();
+                ctx.arc(sx, sy, r + th * 0.42, a0, a1);
+                ctx.strokeStyle = `rgba(220,250,255,${0.7 + 0.3 * pulse})`;
+                ctx.lineWidth = Math.max(1.5, th * 0.22);
+                ctx.stroke();
+                // Inner edge line
+                ctx.beginPath();
+                ctx.arc(sx, sy, r - th * 0.42, a0, a1);
+                ctx.strokeStyle = 'rgba(150,235,255,0.55)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Hex-strut ribs across the plate for a "tech shield" read
+                ctx.strokeStyle = 'rgba(230,250,255,0.5)';
+                ctx.lineWidth = 1.5;
+                const ribs = 5;
+                for (let i = 0; i <= ribs; i++) {
+                    const a = a0 + (a1 - a0) * (i / ribs);
+                    ctx.beginPath();
+                    ctx.moveTo(sx + Math.cos(a) * (r - th * 0.5), sy + Math.sin(a) * (r - th * 0.5));
+                    ctx.lineTo(sx + Math.cos(a) * (r + th * 0.5), sy + Math.sin(a) * (r + th * 0.5));
+                    ctx.stroke();
+                }
                 ctx.restore();
             }
 
@@ -12322,6 +13162,80 @@
                     ctx.stroke();
                 }
 
+                // DualTox Ignition: a roaring wreath of green fire with rising tongues, an
+                // inner heat-haze, licking flame shapes, and drifting embers.
+                if (ignitionActive()) {
+                    ctx.save();
+                    const R = player.radius;
+                    // 1) pulsing outer heat glow
+                    const heat = 0.6 + 0.4 * Math.sin(runTime * 12);
+                    const halo = ctx.createRadialGradient(sx, sy, R * 0.4, sx, sy, R + 26 + heat * 6);
+                    halo.addColorStop(0, "rgba(140,255,90,0.30)");
+                    halo.addColorStop(0.55, "rgba(80,220,60,0.20)");
+                    halo.addColorStop(1, "rgba(30,120,30,0)");
+                    ctx.fillStyle = halo;
+                    ctx.beginPath(); ctx.arc(sx, sy, R + 26 + heat * 6, 0, Math.PI * 2); ctx.fill();
+                    // 2) ring of licking flame tongues (teardrop shapes that flicker in length)
+                    ctx.shadowColor = "rgba(120,255,90,0.8)"; ctx.shadowBlur = 12;
+                    const tongues = 12;
+                    for (let k = 0; k < tongues; k++) {
+                        const a = (k / tongues) * Math.PI * 2 + runTime * 1.4;
+                        const flick = 0.65 + 0.5 * Math.abs(Math.sin(runTime * 10 + k * 1.7));
+                        const baseR = R + 3;
+                        const tipR = R + 10 + flick * 20;
+                        const bx = sx + Math.cos(a) * baseR, by = sy + Math.sin(a) * baseR;
+                        const tx2 = sx + Math.cos(a) * tipR, ty2 = sy + Math.sin(a) * tipR;
+                        const perp = a + Math.PI / 2;
+                        const wob = Math.sin(runTime * 8 + k) * 3;
+                        const w = 5 + flick * 2;
+                        const lx = bx + Math.cos(perp) * w + Math.cos(perp) * wob;
+                        const ly = by + Math.sin(perp) * w + Math.sin(perp) * wob;
+                        const rx = bx - Math.cos(perp) * w + Math.cos(perp) * wob;
+                        const ry = by - Math.sin(perp) * w + Math.sin(perp) * wob;
+                        const fg = ctx.createLinearGradient(bx, by, tx2, ty2);
+                        fg.addColorStop(0, "rgba(60,180,40,0.15)");
+                        fg.addColorStop(0.4, "rgba(120,240,70,0.8)");
+                        fg.addColorStop(1, "rgba(225,255,180,0.95)");
+                        ctx.fillStyle = fg;
+                        ctx.beginPath();
+                        ctx.moveTo(lx, ly);
+                        ctx.quadraticCurveTo(tx2, ty2, rx, ry);
+                        ctx.quadraticCurveTo(bx, by, lx, ly);
+                        ctx.closePath(); ctx.fill();
+                    }
+                    ctx.shadowBlur = 0;
+                    // 3) bright inner core ring
+                    ctx.strokeStyle = `rgba(200,255,150,${0.5 + 0.4 * heat})`;
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath(); ctx.arc(sx, sy, R + 2, 0, Math.PI * 2); ctx.stroke();
+                    // 4) drifting embers
+                    for (let k = 0; k < 7; k++) {
+                        const t2 = (runTime * 0.9 + k * 0.37) % 1;
+                        const a = k * 2.4 + runTime * 0.8;
+                        const er = R + 4 + t2 * 30;
+                        const ex = sx + Math.cos(a) * er, ey = sy + Math.sin(a) * er - t2 * 14;
+                        ctx.fillStyle = `rgba(190,255,140,${0.8 * (1 - t2)})`;
+                        ctx.beginPath(); ctx.arc(ex, ey, 1.8 * (1 - t2) + 0.6, 0, Math.PI * 2); ctx.fill();
+                    }
+                    ctx.restore();
+                }
+
+                // DualTox mode switch: a spinning arc + label while you're stunned mid-switch.
+                if (player.switchStun && player.switchStun > 0) {
+                    const rr = player.radius + 12;
+                    const rot = runTime * 10;
+                    ctx.save();
+                    ctx.strokeStyle = "rgba(150,255,120,0.9)";
+                    ctx.lineWidth = 3;
+                    ctx.beginPath(); ctx.arc(sx, sy, rr, rot, rot + Math.PI * 1.2); ctx.stroke();
+                    ctx.beginPath(); ctx.arc(sx, sy, rr, rot + Math.PI, rot + Math.PI * 2.2); ctx.stroke();
+                    ctx.fillStyle = "rgba(190,255,150,0.95)";
+                    ctx.font = "bold 11px 'Segoe UI', system-ui, sans-serif";
+                    ctx.textAlign = "center";
+                    ctx.fillText(`SWITCHING → MODE ${weaponMode + 1}`, sx, sy - rr - 8);
+                    ctx.restore();
+                }
+
                 ctx.fillStyle = "#4aaaf5";
                 ctx.beginPath();
                 ctx.arc(sx, sy, player.radius, 0, Math.PI * 2);
@@ -12369,6 +13283,42 @@
                         ctx.stroke();
                         ctx.restore();
                     }
+                }
+                if (isToxWeapon(player.weapon)) {
+                    // Toxgun holds one minigun; DualTox holds two (one on each side).
+                    const ang = Math.atan2(mouseY - sy, mouseX - sx);
+                    const spin = runTime * 18;
+                    // drumSide: +1 puts the ammo canister on one side, -1 mirrors it to the other.
+                    const drawMinigun = (lateral, drumSide) => {
+                        ctx.save();
+                        ctx.translate(sx, sy);
+                        ctx.rotate(ang);
+                        ctx.translate(0, lateral);   // offset perpendicular to aim
+                        ctx.fillStyle = '#16241b';
+                        ctx.strokeStyle = '#3fbf6a';
+                        ctx.lineWidth = 1.5;
+                        ctx.fillRect(5, -5, 15, 10);
+                        ctx.strokeRect(5, -5, 15, 10);
+                        ctx.fillStyle = '#1c3324';
+                        ctx.beginPath(); ctx.arc(9, 7 * (drumSide || 1), 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                        ctx.save();
+                        ctx.translate(20, 0);
+                        for (let k = 0; k < 4; k++) {
+                            const a = spin + k * Math.PI / 2;
+                            const oy = Math.sin(a) * 2.6;
+                            ctx.fillStyle = (Math.cos(a) >= 0) ? '#5cff8f' : '#2f9d55';
+                            ctx.fillRect(0, oy - 1, 13, 2);
+                        }
+                        ctx.restore();
+                        if (mouseDown && !gameOver) {
+                            ctx.fillStyle = 'rgba(140,255,150,0.6)';
+                            ctx.beginPath(); ctx.arc(34, 0, 3.2, 0, Math.PI * 2); ctx.fill();
+                        }
+                        ctx.restore();
+                    };
+                    // DualTox: two guns with the canisters mirrored (one right, one left).
+                    if (player.weapon === 'dualtox') { drawMinigun(-11, -1); drawMinigun(11, 1); }
+                    else { drawMinigun(0, 1); }
                 }
                 if (player.weapon === 'engineer' && engineerMode === 'wrench') {
                     // Draw a wrench in the player's hand, swinging like the sword does.
@@ -12719,9 +13669,11 @@
                     const cx = 52;
                     const r = 24;
                     const spacing = 76;
-                    // Stack the abilities vertically, centered on the screen's vertical middle
-                    const startY = HEIGHT / 2 - ((abList.length - 1) * spacing) / 2;
-                    const keyLabels = [keybinds.ability, keybinds.ability2, 'c'];
+                    // Stack the abilities vertically, centered on the screen's vertical middle.
+                    // DualTox adds a 5th ring for its mode switch (like the Time weapon's 5 moves).
+                    const extraRings = (player.weapon === 'dualtox') ? 1 : 0;
+                    const startY = HEIGHT / 2 - ((abList.length - 1 + extraRings) * spacing) / 2;
+                    const keyLabels = [keybinds.ability, keybinds.ability2, 'c', 'v'];
 
                     for (let i = 0; i < abList.length; i++) {
                         const ab = abList[i];
@@ -12746,7 +13698,7 @@
                             ctx.fillText("🔒", cx, cy + 6);
                             ctx.fillStyle = "#888";
                             ctx.font = "bold 10px 'Segoe UI', system-ui, sans-serif";
-                            ctx.fillText(ab.name, cx, cy + r + 12);
+                            ctx.fillText(abilityDisplayName(ab), cx, cy + r + 12);
                             ctx.restore();
                             continue;
                         }
@@ -12797,7 +13749,41 @@
                         // Ability name under the ring
                         ctx.fillStyle = "#cfe8ff";
                         ctx.font = "bold 10px 'Segoe UI', system-ui, sans-serif";
-                        ctx.fillText(ab.name, cx, cy + r + 12);
+                        ctx.fillText(abilityDisplayName(ab), cx, cy + r + 12);
+                        ctx.restore();
+                    }
+
+                    // ---- DualTox mode-switch ring (5th, under the abilities) ----
+                    if (player.weapon === 'dualtox') {
+                        const cy = startY + abList.length * spacing;
+                        ctx.save();
+                        ctx.textAlign = "center";
+                        // background ring
+                        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                        ctx.fillStyle = "rgba(10,20,14,0.85)"; ctx.fill();
+                        ctx.lineWidth = 4; ctx.strokeStyle = "rgba(60,90,70,0.9)"; ctx.stroke();
+                        if (modeSwitchCd > 0) {
+                            // cooldown arc + seconds remaining
+                            const frac = 1 - (modeSwitchCd / 3.0);
+                            ctx.beginPath();
+                            ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2);
+                            ctx.strokeStyle = "#5a9a6a"; ctx.lineWidth = 4; ctx.stroke();
+                            ctx.fillStyle = "#cfe";
+                            ctx.font = "bold 13px 'Segoe UI', system-ui, sans-serif";
+                            ctx.fillText(Math.ceil(modeSwitchCd), cx, cy + 4);
+                        } else {
+                            // ready — show the switch key, glowing green
+                            ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                            ctx.strokeStyle = "#5cff8f"; ctx.lineWidth = 4;
+                            ctx.shadowColor = "#5cff8f"; ctx.shadowBlur = 10; ctx.stroke(); ctx.shadowBlur = 0;
+                            ctx.fillStyle = "#c6ffd6";
+                            ctx.font = "bold 14px 'Segoe UI', system-ui, sans-serif";
+                            ctx.fillText(prettyKey(keybinds.modeSwitch || 'g'), cx, cy + 5);
+                        }
+                        // label: current mode
+                        ctx.fillStyle = "#bfe8c8";
+                        ctx.font = "bold 10px 'Segoe UI', system-ui, sans-serif";
+                        ctx.fillText(`Mode ${weaponMode + 1} · Switch`, cx, cy + r + 12);
                         ctx.restore();
                     }
                 }
@@ -13024,6 +14010,14 @@
                 gameOver = false;
                 player.x = 0;
                 player.y = 0;
+                player.knockVx = 0;
+                player.knockVy = 0;
+                player.switchStun = 0;
+                weaponMode = 0;
+                modeSwitchCd = 0;
+                necroticTimer = 0;
+                pendingMortars = [];
+                mortarLaunchTimer = 0;
                 player.maxHealth = 10;
                 player.health = 10;
                 player.absorption = 0;
@@ -13054,9 +14048,9 @@
                 runeDamageBonus = 0;
                 runeRangeBonus = 0;
                 runeBuffTimer = 0;
-                abilityActiveTimer = [0, 0, 0];
-                abilityCooldown = [0, 0, 0];
-                abilityCooldownMax = [0, 0, 0];
+                abilityActiveTimer = [0, 0, 0, 0];
+                abilityCooldown = [0, 0, 0, 0];
+                abilityCooldownMax = [0, 0, 0, 0];
                 timeAbilityCd = [0, 0, 0, 0, 0];
                 playerTrail = [];
                 timeZWavesLeft = 0; timeZWaveTimer = 0; timeZDmg = 0;
