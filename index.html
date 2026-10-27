@@ -2491,10 +2491,88 @@
             // ---- Versioning & Changelog ----
             // Format: BIGUPDATE.SMALLUPDATE.BUGFIX  (e.g. v1.1 = first small update, v1.0.6 = sixth bugfix)
             // Newest entries first.
-            const GAME_VERSION = "3.5";
-            // Wiped clean. Entries had drifted into the per-weapon balance lists below, so
-            // both were emptied rather than untangled.
-            const CHANGELOG = [];
+            const GAME_VERSION = "3.6";
+            // Rebuilt for 3.6 from a full comparison against the 3.5 build. Old 3.5 entries
+            // stay retired; per-weapon numbers live in the balance lists below.
+            const CHANGELOG = [
+                {
+                    "version": "3.6a",
+                    "title": "Part 1 — New Weapons",
+                    "date": "",
+                    "changes": [
+                        "SPEAR — free from the start. Thrusts every 0.4s down a 3-tile line that pierces everything, and the tip (outer 30%) hits for 1.35×. Every 3rd click THROWS the spear 10 tiles for 2.2× and plants it; the next click recalls it through everything in between for 2.6×. A planted spear comes back by itself after 8s. Abilities: (Z) Lunge, (X) Whirl, (C) Javelin Rain.",
+                        "SPEAR — (Z) LUNGE (7s): a 6-tile dash for 2.5× during which you can't be hit. If your spear is planted within 16 tiles you fly to it instead, and ripping it out bursts for 3×. (X) WHIRL (11s): three spins in 0.6s across a 3.4-tile radius for 1.4× each; the last spin throws enemies back. (C) JAVELIN RAIN (16s): 5 javelins with marked landing shadows, each a 1.6-tile crater for 4×.",
+                        "SPEAR CHROMAS — Hoplite (Rare), Stormpiercer and Nightfall (Epic). Dragoon (Legendary): every hit burns for 80% over 4s, and Whirl becomes a lock-on spear that jumps 12 times. Aurora (Legendary): a far bigger Javelin Rain. GUNGNIR (Mythic): base damage ×2.65 but cooldowns 10% longer. Your clicks fire a homing 3-spear volley. Lunge fires twin lances. Adds (V) Allfather's Oath and (G) Ragnarok, 40 seconds of falling spears that raise floating spears you can hurl for 60× each.",
+                        "GAUNTLETS 👊 — 6% from the Weekly Boss Chest. Punches every 0.26s, and Attack Speed turns into damage instead of speed. Every landed blow builds COMBO, up to 20 stacks for +120% damage; it drains after 2s without a hit. Every 4th blow is a 2.2× shockwave that knocks enemies back.",
+                        "GAUNTLETS — (Z) METEOR KNUCKLE (9s): a 9-tile dash into a 9× crater that fills your combo. (X) BARRAGE (14s): 20 punches in 1.2s. (C) IRON GUARD (20s): 6s of −45% damage taken and a frozen combo, and every hit you take fires a 4× shockwave around you. (V) SEISMIC SLAM (18s): a 6.5-tile ring for 6×, rising to 12.6× at full combo. (G) ONE INCH PUNCH (35s): a 48-tile lane for 18×, rising to 46.8× at full combo; it spends the whole combo. Chromas: Ironhide, Emberfist, Titanbreaker.",
+                        "DIVINE AXE RHITTA ☀ — 2.5% from the Weekly Boss Chest. Heavy 120° swings every 0.62s, and every 3rd swing is a 2.4× overhead. (Z) SLAM (10s): a lingering nova that hits 8 times for 3×. (X) DIVINE VORTEX (22s): 6s of −90% damage taken inside a burning ring. (C) FEROCIOUS SOLAR RAIN (16s): 14 sun-spears, each a 9× crater. (V) MAXIMUM SOLAR NOVA (60s): a 5s charge, then a whole-map nova for 300×. Chromas: Dawnbreaker, Eclipse, Zenith.",
+                        "REAPER'S SCYTHE ☠ — forged at the Crafting Altar (100 Void Fragments, 5 Corruptalite, 3,000 Boss Essence, 4,000 Lunar Shards, 30 Temporal Shards). 150° strokes every 0.6s, and every 4th stroke is a full circle. Hits and kills harvest SOULS, up to 75: each heals 1% max HP and adds +1.5% damage.",
+                        "REAPER — (Z) SCYTHE THROW (9s): out and back for 3×, hunting enemies at the far end. (X) WRAITH FORM (24s): 6s of −50% damage taken, +35% speed and lifesteal on every swing. (C) JACK-O'-LANTERN BARRAGE (15s): 7 lanterns, each a 7× ghost-fire burst. (V) FINAL HARVEST (55s): a huge slash for 40× plus 3× per soul; it spends every soul and executes non-bosses under 20%. (G) SKELETON KING: needs all 75 souls, and transforms you and every other move. October-only augment: THE GREAT PUMPKIN. Chromas: Pumpkin King, Banshee, Death's Due.",
+                        "WATER ELEMENT 🌊 — now playable. A rare drop from the Water miniboss, much likelier while you hold the Flamethrower or wear Infernal. Fires growing Pressure Bubbles that heal you at full size. Water hits SOAK enemies for 5s: +25% water damage and double knockback. Abilities: (Z) Riptide, (X) Whirlpool (a toggle that pulls enemies in and heals), (C) Geyser, (V) Deluge (water dragons), (G) Well (healing tethers that build a water shield of up to 45% max HP)."
+                    ]
+                },
+                {
+                    "version": "3.6b",
+                    "title": "Part 2 — Weapon Balance",
+                    "date": "",
+                    "changes": [
+                        "ALL WEAPONS — basic attacks and ability cooldowns are 40% slower across the board. Sword, Gauntlets, Reaper and Toxgun/DualTox are exempt on the basic attack, because they turn Attack Speed into damage. Enemies also act 22% slower to compensate, and hitboxes now use each enemy's real body size.",
+                        "WEAPON LEVELS — your weapon now levels up on each of your first player level-ups, reaching Lv4 at player level 4 (it used to take until level 15). The Super Upgrade pick every 5 levels is gone.",
+                        "SWORD — reworked into a heavier blade: a fixed 0.55s swing that alternates left-right, and Attack Speed now adds damage instead of speed (Lv4 swing ~15 → ~59). Abilities now hit for 40% of the swing. BLADE STORM is now an aimed fan of 7 slashes that saw through everything in their path, instead of homing blasts. Repeat casts of PHANTOM BLADES now queue as separate waves.",
+                        "SWORD — CELESTIAL rebalanced: ×3 → ×1.7 damage, cooldowns ×0.5 → ×0.82, echo 20% → 12%. It gains three new moves: (C) SWORD GARDEN (blades you pick up to heal and speed up), (V) FLOWER DASH (a 9-tile blink that swaps places with the enemy and marks it with a rose), (G) SWING OF MIGHT (a 4× giant blade for 9×). NEW MYTHIC: THE WARDEN'S BLADE, a 5% drop from the Warden, with the full Celestial kit on a heavy greatsword.",
+                        "PINBALL — NEW ABILITY (C) GOLDEN PINBALL (55s): one golden ball for 150× damage on the first enemy it touches. New Steel chroma (Epic).",
+                        "TOXGUN — base damage −7%. Tox Dragon is now free and IGNITION is the purchase; old Tox Dragon purchases carry over automatically. Ignition is now full strength: +35% damage, ×1.5 move speed, and a dragon from every kill. Irradiated bonus ×1.5 → ×1.25. DUALTOX: the Balanced minigun no longer slows you while it spins.",
+                        "FLAMETHROWER — a wider, longer stream (34° cone, 6.2 tiles, 3 flame puffs per shot) that hits the edge of enemies. All Flamethrower damage now uses a 0.35 multiplier, so the stream and every ability hit softer (burns are unchanged). BURNING ALTAR reworked: one big shockwave per volley, and it feeds its own cooldown and lifetime; recast it for a healing lance. NEW MYTHIC: HELL, granted free if you own Divine, with a new Z move, THE MAW.",
+                        "TESLA COIL — Shocking Tactic chains now deal 95% damage with no falloff (was 2%). SINGULARITY gains (V) EVENT HORIZON (24 homing black bolts) and (G) KERR-NEWMAN PULSE (a standing black hole that bursts for 900×).",
+                        "PULSE MODULATOR — the pulse now hits the edge of enemies. NEW PULSAR colour (Weekly Boss Chest): Pulse base damage ×8, bigger pulses, +66% to every stat except Range, but other weapons deal −90%. It adds (C) Imbue and (V) Electrify, and Implosion becomes a toggle.",
+                        "TIME ELEMENT — about +22% damage, faster homing orbs, and a 1.45× end-of-range explosion. (Z) is now a TEMPORAL TEAR toggle that repeats faster with Attack Speed. Destructive Rewind is now a fixed 50s cooldown that also pays back damage you recently dealt. NEW SUPPORT STANCE (press H) with 5 moves: Time Seam, Temporal Tome, Accelerate Destruction, Back to the Previous Epoch and Warp. Can now be forged at the Crafting Altar. NEW MYTHIC: CHRONARCH'S TIME (Temporal Crate). Gilded Time has been removed.",
+                        "GALAXY ELEMENT — the whole kit deals −33% damage. The blink is now a fixed 4s cooldown that hits for 8×. Galactic Blast curves toward targets and has a proximity fuse. HOMING CONSTELLATION is now a self-recasting toggle, up to 75 stars, with trinary stars from 10 stacks. Gamma Burst opens 5 vortexes instead of 25. New Redshift and Blueshift chromas, and three Mech Crate augments: Neutron Star, Event Horizon and Conduit.",
+                        "CLEAVER — one bigger crescent per swing with 2× damage and 2× pierce. Dismantle's 20 cuts are now long rakes. Abattoir now stacks up to 3 domains. Guillotine lunge kills also reset its cooldown. NEW 5th ability (G) SHRINE (34s): a rising shrine that bursts, then storms slices for 4s.",
+                        "ENGINEER — first chromas: Copperworks, Arc Welder, Clockwright. The Workshop can now also fabricate RUNES (40% food / 35% crate / 25% rune). The wrench uses a fixed swing, and Attack Speed now adds damage.",
+                        "CRYO-SHATTER — Absolute Zero only slows you on charges you started yourself."
+                    ]
+                },
+                {
+                    "version": "3.6c",
+                    "title": "Part 3 — Modes, Bosses & Enemies",
+                    "date": "",
+                    "changes": [
+                        "CHOOSE A MODE — START GAME now asks: DUNGEON RUN (the classic endless waves) or BOSS BATTLES. Dungeon runs begin with a SETUP PHASE: the arena stays empty and the clock is frozen until you press ▶ START DUNGEON (or Enter), so you can place turrets first.",
+                        "BOSS BATTLES — fight one boss in a bare arena with your weapon at Lv4 and character level 40. Each boss has an account-level requirement and an iCoin entry fee, and pays out only on a kill. Bosses: The Chronarch and The Warmachine (free), Corrupted Chronarch and Corrupted Mech (Lv 85), The Still Storm (Lv 150), The Castellan & The Warden (Lv 160), Mutated Chronarch (Lv 175), Mutated Warmachine (Lv 180), Abyssal Warmachine (Lv 190).",
+                        "VICTORY CARD & RETRY — a boss kill shows your clear time (with personal best), highest DPS, total boss damage, loadout and rewards. A new ↻ RETRY button restarts with the same mode, weapon, difficulty and boss.",
+                        "BOSS CODEX — every boss, form, passive and drop in one place, with live portraits. Each defeat reveals another line of its move list.",
+                        "RENAMES — Kronax is now THE CHRONARCH and the Mech is THE WARMACHINE.",
+                        "WARMACHINE — in every form, below 50% HP it now calls Fire Pillars across the arena, and its plasma bombs speed up each phase.",
+                        "NEW MINIBOSS: CAPACITOR — your damage charges it up. When full it fires an 8-tile shock nova; it also fires homing zap orbs. NEW ENEMY: KNIFER (from wave 16) — the tankiest regular enemy. It circles at range, roots briefly, then throws 3 knives.",
+                        "Spitters now appear from wave 14 (was 6) and in far smaller numbers. Bosses take 10% less damage and 90% less knockback on every difficulty.",
+                        "DIFFICULTY — Nightmare, Tartarus and Professional are easier: healing and cooldown penalties are about 30% weaker, Tartarus/Professional curses are softened, and Sealed is now −70% healing instead of no healing. Professional's entry fee is 25,000 → 1,000 iCoins. Boss bullets get faster on harder difficulties (×1.15 Hard up to ×2.1 Professional)."
+                    ]
+                },
+                {
+                    "version": "3.6d",
+                    "title": "Part 4 — Progression, Crates & Shop",
+                    "date": "",
+                    "changes": [
+                        "LEVEL-UPS REWORKED — every level now gives +1% to every stat, and every 5th level adds +5% to one stat in rotation (DMG → HP → AS → DEF → RNG → LS → DG).",
+                        "CRATES — a new SWAP CRATE TYPE button cycles Chroma Crate → Temporal Crate → Weekly Boss Chest → Mech Crate. VIEW CHANCES shows the exact odds, QUICK ROLL skips the reel, and a jackpot aura plays on the rarest prize. Chroma Crate mythic odds are now about 0.1%, and mythics can no longer be bought with crates.",
+                        "TEMPORAL CRATE — from Chronarch fights. Prizes include iCoins, Lunar and Temporal Shards, the Chrono Relic, Time variants, the Temporal colour, a Prismagem, and Chronarch's Time (0.05%). WEEKLY BOSS CHEST — 1 per Still Storm or Twins kill, and the only source of Gauntlets, Rhitta, Pulsar and the Heroic Pendant. MECH CRATE — from Mutated and Abyssal Warmachine clears, with Galaxy augments, Abyssal/Glitched variants and the Self-Repair Relic.",
+                        "CRAFTING ALTAR — every recipe is in one Forge list. It's now a simple hit-or-miss timing bar, and a miss refunds 75% of the materials. New materials: Corruptalite, Mutagem, Prismagem, Void Fragments and Temporal Shards. Corrupting a weapon now costs 2 Mutagems with no luck roll; corrupted weapons deal +45% (was +50%). A PRISMAGEM forges the Mutated variant onto any weapon.",
+                        "ACCESSORIES — the bag holds 18, but only one of each kind can be worn. New: Salvage Charm, Self-Repair Relic, Cosmic Energy, Heroic Pendant, Summoning Ring. The Chrono Relic now gives +75% Time damage and comes only from Temporal Crates. Shadow Cloak now also costs 100 Void Fragments.",
+                        "EQUATION SHARDS — kills can drop π, Σ, √, ∫, ∞ and x² shards (1.5%, 12% from bosses). They are never spent and permanently boost Range, Damage, True Defense, Attack Speed, free recasts and Max HP.",
+                        "NEW SHOP UPGRADES — Absorb (2,500 iCoins: part of your lifesteal becomes absorb), Elementalist, Savvy (cheaper prices), Chromatic Booster, Fortune (+20% crate luck at max), Overclocked Coils (−15% cooldowns at max), Essence Refinery, and Final Damage / Final Defense / Final Attack Speed.",
+                        "THE ARMOURY — the inventory is now one grid of your materials, unlockable weapons and relics.",
+                        "WEAPON SELECT REDESIGN — a weapon rail with a detail pane showing description, chromas, augments, variants, per-weapon balance notes, squad and difficulty. New settings: AUTO ATTACK (fire without holding click) and DASH DIRECTION (dash toward your cursor or the way you're moving)."
+                    ]
+                },
+                {
+                    "version": "3.6e",
+                    "title": "Part 5 — Removed",
+                    "date": "",
+                    "changes": [
+                        "REMOVED — the Armor system (Viking Helmet), Lucky Open (replaced by the Fortune upgrade), the Mirror Clone shop item, the Basic Ring relic, Corrupted Shards and the 50% corruption roll, Super Upgrades, and automatic overheal-to-absorb (now the Absorb upgrade). Auto Upgrader owners got a 75 iCoin refund."
+                    ]
+                }
+            ];
 
             // -------- The one recorded sound in the game --------
             // Everything else the SoundManager makes, it synthesizes from oscillators and
